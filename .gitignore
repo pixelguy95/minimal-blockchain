@@ -1,5 +1,10 @@
 .gradle
 /build/
+/out/
+/.idea/
+
+# Ingore the idea project file
+minimal-blockchain.iml
 
 # Ignore Gradle GUI config
 gradle-app.setting
