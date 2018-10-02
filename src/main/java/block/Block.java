@@ -54,10 +54,7 @@ public class Block {
     private byte[] calcHash() throws NoSuchAlgorithmException {
 
         MessageDigest md = MessageDigest.getInstance("SHA-256");
-
         return md.digest(ByteBuffer.allocate(40).put(header).putInt(this.nonce).array());
-
-
     }
 
 
