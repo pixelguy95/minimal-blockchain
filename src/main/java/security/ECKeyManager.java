@@ -1,11 +1,10 @@
 package security;
 
-import java.io.DataOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 public class ECKeyManager {
 
@@ -25,18 +24,37 @@ public class ECKeyManager {
         }
     }
 
-    public static void writeKeyToFile(PrivateKey privateKey, String path) throws IOException {
+    public static void writePairToFile(KeyPair pair, String path) {
 
         try {
             DataOutputStream os = new DataOutputStream(new FileOutputStream(path));
-            os.write(privateKey.getEncoded());
+            os.write(pair.getPrivate().getEncoded());
+            os.write(pair.getPublic().getEncoded());
             os.close();
         } catch (Exception e) {
             System.err.println("Something went wrong during file writing:\n" + e.getMessage());
         }
     }
 
-    public static PrivateKey loadKeyFromFile(String path) {
+    public static KeyPair loadPairFromFile(String path) {
+
+        try {
+            DataInputStream os = new DataInputStream(new FileInputStream(path));
+            byte[] privateKey = new byte[144];
+            byte[] publicKey = new byte[88];
+            os.read(privateKey, 0, 144);
+            os.read(publicKey, 0, 88);
+            os.close();
+
+            KeyFactory fact = KeyFactory.getInstance("ECDSA", "BC");
+            PublicKey pubK = fact.generatePublic(new X509EncodedKeySpec(publicKey));
+            PrivateKey privKey = fact.generatePrivate(new PKCS8EncodedKeySpec(privateKey));
+
+            return new KeyPair(pubK, privKey);
+
+        } catch (Exception e) {
+            System.err.println("Something went wrong during file reading:\n" + e.getCause());
+        }
 
         return null;
     }
