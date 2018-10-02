@@ -27,23 +27,6 @@ public class Core {
         System.out.println(new BigInteger(pair.getPublic().getEncoded()).toString(16));
         System.out.println(new BigInteger(pair2.getPublic().getEncoded()).toString(16));
 
-
-//        System.out.println(new String(Base64.encode(pair.getPrivate().getEncoded())));
-//
-//
-//        Signature signature = Signature.getInstance("SHA256withECDSA");
-//        signature.initSign(pair.getPrivate());
-//
-//        signature.update("SIGN ME".getBytes());
-//
-//        byte[] signed = signature.sign();
-//
-//        signature = Signature.getInstance("SHA256withECDSA");
-//        signature.initVerify(pair.getPublic());
-//
-//        signature.update("SIGN ME".getBytes());
-//
-//        System.out.println(signature.verify(signed));
     }
 
 

@@ -58,4 +58,16 @@ public class ECKeyManager {
 
         return null;
     }
+
+    public static PublicKey bytesToPublicKey(byte[] key) {
+        try {
+            KeyFactory fact = KeyFactory.getInstance("ECDSA", "BC");
+            return fact.generatePublic(new X509EncodedKeySpec(key));
+
+        } catch (Exception e) {
+            System.err.println("Something went wrong during file reading:\n" + e.getCause());
+        }
+
+        return null;
+    }
 }

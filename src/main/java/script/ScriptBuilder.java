@@ -60,8 +60,23 @@ public class ScriptBuilder {
         return this;
     }
 
+    public ScriptBuilder dup() {
+        bb.write(OpCodes.OP_DUP);
+        return this;
+    }
+
+    public ScriptBuilder hash160() {
+        bb.write(OpCodes.OP_HASH160);
+        return this;
+    }
+
     public ScriptBuilder equalVerify() {
         bb.write(OpCodes.OP_EQUALVERIFY);
+        return this;
+    }
+
+    public ScriptBuilder checkSig() {
+        bb.write(OpCodes.OP_CHECKSIG);
         return this;
     }
 
