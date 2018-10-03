@@ -17,4 +17,5 @@ dependencies {
     compile group: 'commons-codec', name: 'commons-codec', version: '1.11'
     compile group: 'org.bouncycastle', name: 'bcprov-jdk16', version: '1.46'
     compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
+    compile group: "com.sparkjava:spark-core:2.7.2"
 }

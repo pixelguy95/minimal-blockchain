@@ -50,6 +50,7 @@ public class ScriptBuilderTest {
         byte[] scriptPubKey = ScriptBuilder.newScript().dup().hash160().writeToStack(rip).equalVerify().checkSig().end();
 
         byte[] combinedScript = ArrayUtils.addAll(scriptSig, scriptPubKey);
+        System.out.println(combinedScript.length);
 
         System.out.println(new BigInteger(scriptSig).toString(16));
         System.out.println(new BigInteger(scriptPubKey).toString(16));
