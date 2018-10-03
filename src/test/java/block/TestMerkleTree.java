@@ -14,11 +14,11 @@ import static org.junit.Assert.*;
 public class TestMerkleTree {
 
     @Test
-    public void testCreateMerkleTree() {
+    public void testCreateMerkleTreeFullPair() {
 
         try {
             MerkleTree mt = new MerkleTree();
-            Random r = new Random();
+            Random r = new Random(System.currentTimeMillis());
 
             byte[] first = new byte[32];
             byte[] second = new byte[32];
@@ -30,22 +30,59 @@ public class TestMerkleTree {
             r.nextBytes(third);
             r.nextBytes(forth);
 
-            byte[] shouldBe = doubleSHA256(doubleSHA256(first, second), doubleSHA256(third, forth));
-
             List<byte[]> l = new LinkedList<>();
 
-            assertEquals(mt.createMerkle(l), shouldBe);
+            l.add(first.clone());
+            l.add(second.clone());
+            l.add(third.clone());
+            l.add(forth.clone());
+
+            byte[] shouldBe = doubleSHA256(doubleSHA256(first, second), doubleSHA256(third, forth));
+
+            assertArrayEquals(mt.createMerkle(l), shouldBe);
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
     }
 
+    @Test
+    public void testCreateMerkleTreeIncompletePair() {
+
+        try {
+            MerkleTree mt = new MerkleTree();
+            Random r = new Random(System.currentTimeMillis());
+
+            byte[] first = new byte[32];
+            byte[] second = new byte[32];
+            byte[] third = new byte[32];
+
+            r.nextBytes(first);
+            r.nextBytes(second);
+            r.nextBytes(third);
+
+            List<byte[]> l = new LinkedList<>();
+
+            l.add(first.clone());
+            l.add(second.clone());
+            l.add(third.clone());
+
+            byte[] shouldBe = doubleSHA256(doubleSHA256(first, second), doubleSHA256(third, third));
+
+            assertArrayEquals(mt.createMerkle(l), shouldBe);
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     private byte[] doubleSHA256(byte[] first, byte[] second) throws NoSuchAlgorithmException {
 
         MessageDigest md = MessageDigest.getInstance("SHA-256");
-        return md.digest(md.digest(ByteBuffer.allocate(40).put(ByteBuffer.allocate(64).put(first).put(second)).array()));
+        return md.digest(md.digest(ByteBuffer.allocate(64).put(first).put(second).array()));
 
     }
+
 
 }

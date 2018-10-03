@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Random;
 
 public class Block {
@@ -37,8 +38,7 @@ public class Block {
 
     protected void mineBlock(int difficulty) throws NoSuchAlgorithmException {
 
-
-        while(!Arrays.equals(Arrays.copyOfRange(this.hash, 0, difficulty), new byte[difficulty])){
+        while(!BitSet.valueOf(this.hash).get(0, difficulty).equals(BitSet.valueOf(new byte[1]))){
             this.nonce++;
             this.hash = calcHash();
             if( nonce % 1000000 == 0 ){
@@ -57,14 +57,15 @@ public class Block {
         return md.digest(ByteBuffer.allocate(40).put(header).putInt(this.nonce).array());
     }
 
-
+    /**
+     *  Only for test purposes
+     */
     public static void main(String[] args) throws NoSuchAlgorithmException {
 
         byte[] prevHash = new byte[32];
         Random r = new Random();
         r.nextBytes(prevHash);
 
-        new Block(1, prevHash, 1).mineBlock(4);
+        new Block(1, prevHash, 1).mineBlock(32);
     }
-
 }
