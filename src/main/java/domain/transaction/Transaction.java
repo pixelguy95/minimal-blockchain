@@ -1,9 +1,12 @@
 package domain.transaction;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -79,7 +82,6 @@ public class Transaction {
         int version = bb.getInt();
         short flag = bb.getShort();
         long inCounter = bb.getLong();
-        long outCounter = bb.getLong();
 
         List<Input> inputs = new ArrayList<>();
         for(int i = 0; i < inCounter; i++) {
@@ -89,6 +91,7 @@ public class Transaction {
             inputs.add(Input.fromBytes(data));
         }
 
+        long outCounter = bb.getLong();
         List<Output> outputs = new ArrayList<>();
         for(int i = 0; i < outCounter; i++) {
             int size = bb.getInt();
@@ -109,5 +112,13 @@ public class Transaction {
         int locktime = bb.getInt();
 
         return new Transaction(version, flag, inCounter, outCounter, inputs, outputs, witnesses, locktime);
+    }
+
+    public byte[] fullHash(){
+        return DigestUtils.sha256(serialize());
+    }
+
+    public byte[] partialHash(int outIndex) {
+        return DigestUtils.sha256(new Transaction(version, flag, inCounter, outCounter, inputs, Arrays.asList(outputs.get(outIndex)), witnesses, lockTime).serialize());
     }
 }

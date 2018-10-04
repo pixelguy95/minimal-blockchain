@@ -17,7 +17,7 @@ public class Output {
     }
 
     public byte[] serialize() {
-        ByteBuffer bb = ByteBuffer.allocate((int) (Long.BYTES + Long.BYTES + scriptPubKeyLength*Byte.SIZE));
+        ByteBuffer bb = ByteBuffer.allocate((int) (Long.BYTES + Long.BYTES + scriptPubKeyLength));
         bb.putLong(amount);
         bb.putLong(scriptPubKeyLength);
         bb.put(scriptPubKey);

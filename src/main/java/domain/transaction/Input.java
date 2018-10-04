@@ -19,7 +19,7 @@ public class Input {
     }
 
     public byte[] serialize() {
-        ByteBuffer bb = ByteBuffer.allocate((int) (32 + Integer.BYTES + Long.BYTES + scriptSigSize*Byte.SIZE + Integer.BYTES));
+        ByteBuffer bb = ByteBuffer.allocate((int) (32 + Integer.BYTES + Long.BYTES + scriptSigSize + Integer.BYTES));
         bb.put(transactionHash);
         bb.putInt(outputIndex);
         bb.putLong(scriptSigSize);
