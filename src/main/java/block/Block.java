@@ -22,7 +22,6 @@ public class Block {
         this.previousHash = previousHash;
         this.timestamp = timestamp;
 
-
         ByteBuffer bb = ByteBuffer.allocate(36);
 
         this.header = new byte[36];

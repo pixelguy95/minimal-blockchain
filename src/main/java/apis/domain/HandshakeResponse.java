@@ -2,7 +2,7 @@ package apis.domain;
 
 import java.util.List;
 
-public class HandshakeResponse {
+public class HandshakeResponse implements Response {
 
     public List<String> knownHosts;
 

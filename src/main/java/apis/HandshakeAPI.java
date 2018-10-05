@@ -14,10 +14,25 @@ import java.util.Arrays;
 
 public class HandshakeAPI {
 
-    public static HandshakeResponse newConnection(Request request, Response response) throws IOException {
+    /**
+     * TODO: Get known nodes from the key value db. Add connector to list, return list
+     * @param request
+     * @param response
+     * @return
+     * @throws IOException
+     */
+    public static HandshakeResponse newConnection(Request request, Response response) {
+        return new HandshakeResponse(Arrays.asList(request.ip()));
+    }
 
-        URL url = new URL("http://checkip.amazonaws.com/");
-        BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-        return new HandshakeResponse(Arrays.asList(br.readLine()));
+    /**
+     * TODO: Remove the requester from the known nodes db
+     * @param request
+     * @param response
+     * @return
+     */
+    public static String leave(Request request, Response response) {
+
+        return "Good bye";
     }
 }
