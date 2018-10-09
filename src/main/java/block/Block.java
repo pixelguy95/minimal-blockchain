@@ -33,8 +33,7 @@ public class Block {
 
         this.hash = this.calcHash();
     }
-
-
+    
     protected void mineBlock(int difficulty) throws NoSuchAlgorithmException {
 
         while(!BitSet.valueOf(this.hash).get(0, difficulty).equals(BitSet.valueOf(new byte[1]))){
