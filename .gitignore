@@ -2,7 +2,7 @@
 /build/
 /out/
 /.idea/
-
+/.local-persistence/
 # Ingore the idea project file
 minimal-blockchain.iml
 

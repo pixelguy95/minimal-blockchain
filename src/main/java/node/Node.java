@@ -24,6 +24,6 @@ public class Node {
         get("/blockheight", BlockAPI::getCurrentBlockHeight, gson::toJson);
         get("/block/:id", BlockAPI::getBlock, gson::toJson);
         post("/new-block", BlockAPI::newBlockFound, gson::toJson);
-
+        KnownNodesList.getKnownNodes();
     }
 }
