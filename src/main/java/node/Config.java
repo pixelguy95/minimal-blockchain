@@ -1,5 +1,6 @@
 package node;
 
+import db.DBSingletons;
 import node.domain.KnownNodesList;
 import org.apache.commons.cli.*;
 
@@ -25,6 +26,12 @@ public class Config {
                 isInitial = true;
             }
 
+            if(line.hasOption("f")) {
+                dbFolder = line.getOptionValue("f");
+            }
+
+            DBSingletons.init(dbFolder);
+
             if(line.hasOption("n")) {
                 isInitial = false;
                 KnownNodesList.addNode(new KnownNodesList.Host(line.getOptionValue("n")));
@@ -32,10 +39,6 @@ public class Config {
 
             if(line.hasOption("p")) {
                 port = Integer.parseInt(line.getOptionValue("p"));
-            }
-
-            if(line.hasOption("f")) {
-                dbFolder = line.getOptionValue("f");
             }
 
 

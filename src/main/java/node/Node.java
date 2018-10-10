@@ -3,13 +3,14 @@ package node;
 import apis.BlockAPI;
 import apis.HandshakeAPI;
 import com.google.gson.Gson;
+import db.DBSingletons;
 import node.domain.KnownNodesList;
 
 import static spark.Spark.*;
 
 public class Node {
 
-    public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+    public static void main(String[] args) {
 
         Config.parse(args);
         setUpEndPoints();
