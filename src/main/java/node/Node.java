@@ -10,8 +10,13 @@ import static spark.Spark.*;
 public class Node {
 
     public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-        port(30109);
 
+        Config.parse(args);
+        setUpEndPoints();
+    }
+
+    public static void setUpEndPoints() {
+        port(Config.port);
         Gson gson = new Gson();
         String version = Node.class.getPackage().getImplementationVersion();
 
@@ -24,6 +29,10 @@ public class Node {
         get("/blockheight", BlockAPI::getCurrentBlockHeight, gson::toJson);
         get("/block/:id", BlockAPI::getBlock, gson::toJson);
         post("/new-block", BlockAPI::newBlockFound, gson::toJson);
-        KnownNodesList.getKnownNodes();
+
+        /*Transactions*/
+        /*new-transaction*/
+        /*get-transaction*/
+        /*get-utxo*/
     }
 }
