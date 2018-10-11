@@ -9,7 +9,7 @@ import static spark.Spark.*;
 
 public class Node {
 
-    public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+    public static void main(String[] args) {
 
         Config.parse(args);
 
