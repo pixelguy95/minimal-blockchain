@@ -1,4 +1,4 @@
-package node.domain;
+package apis;
 
 import db.DBSingletons;
 import org.apache.commons.lang.SerializationUtils;

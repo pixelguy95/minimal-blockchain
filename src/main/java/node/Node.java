@@ -3,7 +3,7 @@ package node;
 import apis.BlockAPI;
 import apis.HandshakeAPI;
 import com.google.gson.Gson;
-import node.domain.KnownNodesList;
+import db.DBSingletons;
 
 import static spark.Spark.*;
 
@@ -12,7 +12,16 @@ public class Node {
     public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 
         Config.parse(args);
+
+        if(Config.isInitial) {
+            initial();
+        }
+
         setUpEndPoints();
+    }
+
+    public static void initial() {
+        DBSingletons.restart(Config.dbFolder);
     }
 
     public static void setUpEndPoints() {

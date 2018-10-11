@@ -1,6 +1,6 @@
 package node;
 
-import node.domain.KnownNodesList;
+import apis.KnownNodesList;
 import org.apache.commons.cli.*;
 
 public class Config {
