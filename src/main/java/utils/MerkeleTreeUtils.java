@@ -10,7 +10,7 @@ public class MerkeleTreeUtils {
     public static byte[] createMerkle(List<byte[]> leaves){
 
         if(leaves.isEmpty()){
-            return null;
+            return DigestUtils.sha256("place holder");
         }
 
         while (leaves.size() > 1){

@@ -1,4 +1,4 @@
-package apis;
+package apis.static_structures;
 
 import db.DBSingletons;
 import org.apache.commons.lang.SerializationUtils;

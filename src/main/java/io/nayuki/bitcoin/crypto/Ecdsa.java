@@ -14,7 +14,7 @@ import java.util.Objects;
 
 
 /**
- * Performs ECDSA signature generation and verification. Provides just three static functions.
+ * Performs ECDSA signature generation and verification. Provides just three static_structures functions.
  */
 public final class Ecdsa {
 	

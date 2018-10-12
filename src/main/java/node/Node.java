@@ -9,19 +9,20 @@ import static spark.Spark.*;
 
 public class Node {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
+        Runtime.getRuntime().addShutdownHook(new ShutdownHook());
         Config.parse(args);
 
         if(Config.isInitial) {
             initial();
         }
 
-        setUpEndPoints();
+        //setUpEndPoints();
     }
 
     public static void initial() {
-        DBSingletons.restart(Config.dbFolder);
+        DBSingletons.destroy(Config.dbFolder);
     }
 
     public static void setUpEndPoints() {

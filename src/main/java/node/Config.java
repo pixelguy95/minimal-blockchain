@@ -1,6 +1,6 @@
 package node;
 
-import apis.KnownNodesList;
+import apis.static_structures.KnownNodesList;
 import db.DBSingletons;
 import org.apache.commons.cli.*;
 
