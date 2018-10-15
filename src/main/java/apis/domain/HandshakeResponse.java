@@ -2,11 +2,8 @@ package apis.domain;
 
 import java.util.List;
 
-public class HandshakeResponse implements Response {
-
-    public List<String> knownHosts;
-
-    public HandshakeResponse(List<String> hosts) {
-        this.knownHosts = hosts;
-    }
+/**
+ * Needs only return boolean value, can
+ */
+public class HandshakeResponse extends Response {
 }

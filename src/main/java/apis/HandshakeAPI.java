@@ -1,5 +1,6 @@
 package apis;
 
+import apis.domain.AddrResponse;
 import apis.domain.HandshakeResponse;
 import spark.Request;
 import spark.Response;
@@ -22,7 +23,7 @@ public class HandshakeAPI {
      * @throws IOException
      */
     public static HandshakeResponse newConnection(Request request, Response response) {
-        return new HandshakeResponse(Arrays.asList(request.ip()));
+        return new HandshakeResponse(Arrays.asList(request.ip() + ":" + request.params("port")));
     }
 
     /**
@@ -34,5 +35,10 @@ public class HandshakeAPI {
     public static String leave(Request request, Response response) {
 
         return "Good bye";
+    }
+
+    public static AddrResponse addr(Request request, Response response) {
+
+        return null;
     }
 }

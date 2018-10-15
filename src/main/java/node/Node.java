@@ -16,9 +16,11 @@ public class Node {
 
         if(Config.isInitial) {
             initial();
+        } else {
+
         }
 
-        //setUpEndPoints();
+        setUpEndPoints();
     }
 
     public static void initial() {
@@ -32,6 +34,7 @@ public class Node {
 
         /*Network handling*/
         get("/version", (req, res) -> version != null ? version : "Unknown (IntelliJ)", gson::toJson);
+        post("/addr/:port", HandshakeAPI::addr, gson::toJson);
         get("/handshake/:port", HandshakeAPI::newConnection, gson::toJson);
         get("/leave/:port", HandshakeAPI::leave, gson::toJson);
 
