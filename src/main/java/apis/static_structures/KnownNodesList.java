@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 
 public class KnownNodesList {
 
@@ -24,7 +25,7 @@ public class KnownNodesList {
             if(serializedList != null && serializedList.length != 0) {
                 System.out.println("loaded nodes list");
                 knownNodesList = (HashSet<Host>) SerializationUtils.deserialize(serializedList);
-                getKnownNodes().stream().forEach(n-> System.out.println(n.ip + ":" + n.port));
+                //getKnownNodes().stream().forEach(n-> System.out.println(n.ip + ":" + n.port));
             } else {
                 System.out.println("new empty nodes list");
                 knownNodesList = new HashSet<>();
@@ -56,6 +57,18 @@ public class KnownNodesList {
         public Host(String ipAndPort) {
             this.ip = ipAndPort.split(":")[0];
             this.port = Integer.parseInt(ipAndPort.split(":")[1]);
+        }
+
+        public String asURL() {
+            return "http://"+ip+":"+port;
+        }
+
+        public boolean equals(Object o) {
+            return ((Host)o).ip.equals(this.ip) && ((Host)o).port == this.port;
+        }
+
+        public int hashCode() {
+            return Objects.hash(ip, port);
         }
     }
 }

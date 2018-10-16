@@ -1,17 +1,13 @@
 package apis;
 
-import apis.domain.AddrResponse;
-import apis.domain.HandshakeResponse;
+import apis.domain.*;
+import apis.static_structures.KnownNodesList;
+import com.google.gson.Gson;
 import spark.Request;
 import spark.Response;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.URL;
-import java.util.Arrays;
+import java.util.ArrayList;
 
 public class HandshakeAPI {
 
@@ -22,8 +18,15 @@ public class HandshakeAPI {
      * @return
      * @throws IOException
      */
-    public static HandshakeResponse newConnection(Request request, Response response) {
-        return new HandshakeResponse(Arrays.asList(request.ip() + ":" + request.params("port")));
+    public static HandshakeResponse handShake(Request request, Response response) {
+        HandshakeRequest hsr = new Gson().fromJson(request.body(), HandshakeRequest.class);
+
+        System.out.println(hsr.time);
+        System.out.println(hsr.youAddr);
+        System.out.println(hsr.myAddr);
+
+        //TODO: verify version number etc...
+        return new HandshakeResponse();
     }
 
     /**
@@ -38,7 +41,15 @@ public class HandshakeAPI {
     }
 
     public static AddrResponse addr(Request request, Response response) {
+        AddrRequest hsr = new Gson().fromJson(request.body(), AddrRequest.class);
+        System.out.println("Adding new address");
+        System.out.println(hsr.address + ":" + hsr.port);
+        KnownNodesList.addNode(new KnownNodesList.Host(hsr.address, hsr.port));
+        System.out.println("awawf");
+        return new AddrResponse();
+    }
 
-        return null;
+    public static GetAddrResponse getAddresses(Request request, Response response) {
+        return new GetAddrResponse(new ArrayList<>(KnownNodesList.getKnownNodes()));
     }
 }

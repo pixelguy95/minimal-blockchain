@@ -2,8 +2,15 @@ package node;
 
 import apis.BlockAPI;
 import apis.HandshakeAPI;
+import apis.domain.HandshakeRequest;
+import apis.domain.HandshakeResponse;
+import apis.static_structures.KnownNodesList;
 import com.google.gson.Gson;
 import db.DBSingletons;
+import node.tasks.NetworkSetup;
+import utils.RESTUtils;
+
+import java.util.Arrays;
 
 import static spark.Spark.*;
 
@@ -15,16 +22,17 @@ public class Node {
         Config.parse(args);
 
         if(Config.isInitial) {
-            initial();
+            initialNode();
         } else {
-
+            new NetworkSetup().run();
         }
 
         setUpEndPoints();
     }
 
-    public static void initial() {
+    public static void initialNode() {
         DBSingletons.destroy(Config.dbFolder);
+        DBSingletons.init(Config.dbFolder);
     }
 
     public static void setUpEndPoints() {
@@ -34,8 +42,9 @@ public class Node {
 
         /*Network handling*/
         get("/version", (req, res) -> version != null ? version : "Unknown (IntelliJ)", gson::toJson);
-        post("/addr/:port", HandshakeAPI::addr, gson::toJson);
-        get("/handshake/:port", HandshakeAPI::newConnection, gson::toJson);
+        post("/addr", HandshakeAPI::addr, gson::toJson);
+        get("/getaddr", HandshakeAPI::getAddresses, gson::toJson);
+        post("/handshake", HandshakeAPI::handShake, gson::toJson);
         get("/leave/:port", HandshakeAPI::leave, gson::toJson);
 
         /*Blocks*/

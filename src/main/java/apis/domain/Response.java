@@ -1,6 +1,6 @@
 package apis.domain;
 
 public abstract class Response {
-    public boolean error = true;
+    public boolean error = false;
     public String errorMessage = "";
 }

@@ -90,6 +90,15 @@ public class Blockchain {
         }
     }
 
+    public long getBestHeight() {
+
+        if(leafs.size() == 0) {
+            return 0;
+        }
+
+        return leafs.values().stream().mapToLong(l->l.height).max().getAsLong();
+    }
+
     public HashMap<ByteBuffer, StoredBlock> getChain() {
         return chain;
     }
