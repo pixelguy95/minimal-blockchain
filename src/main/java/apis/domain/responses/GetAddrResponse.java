@@ -1,13 +1,14 @@
-package apis.domain;
+package apis.domain.responses;
 
+import apis.domain.Host;
 import apis.static_structures.KnownNodesList;
 
 import java.util.List;
 
 public class GetAddrResponse extends Response{
-    List<KnownNodesList.Host> knownHosts;
+    public List<Host> knownHosts;
 
-    public GetAddrResponse(List<KnownNodesList.Host> knownHosts) {
+    public GetAddrResponse(List<Host> knownHosts) {
         this.knownHosts = knownHosts;
     }
 }

@@ -1,4 +1,4 @@
-package apis.domain;
+package apis.domain.responses;
 
 public abstract class Response {
     public boolean error = false;

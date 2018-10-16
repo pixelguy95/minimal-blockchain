@@ -1,4 +1,4 @@
-package apis.domain;
+package apis.domain.responses;
 
 public class AddrResponse extends Response{
 

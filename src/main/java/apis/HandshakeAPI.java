@@ -1,6 +1,11 @@
 package apis;
 
-import apis.domain.*;
+import apis.domain.Host;
+import apis.domain.requests.AddrRequest;
+import apis.domain.requests.HandshakeRequest;
+import apis.domain.responses.AddrResponse;
+import apis.domain.responses.GetAddrResponse;
+import apis.domain.responses.HandshakeResponse;
 import apis.static_structures.KnownNodesList;
 import com.google.gson.Gson;
 import spark.Request;
@@ -44,7 +49,7 @@ public class HandshakeAPI {
         AddrRequest hsr = new Gson().fromJson(request.body(), AddrRequest.class);
         System.out.println("Adding new address");
         System.out.println(hsr.address + ":" + hsr.port);
-        KnownNodesList.addNode(new KnownNodesList.Host(hsr.address, hsr.port));
+        KnownNodesList.addNode(new Host(hsr.address, hsr.port));
         System.out.println("awawf");
         return new AddrResponse();
     }

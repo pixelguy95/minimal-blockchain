@@ -2,15 +2,9 @@ package node;
 
 import apis.BlockAPI;
 import apis.HandshakeAPI;
-import apis.domain.HandshakeRequest;
-import apis.domain.HandshakeResponse;
-import apis.static_structures.KnownNodesList;
 import com.google.gson.Gson;
 import db.DBSingletons;
 import node.tasks.NetworkSetup;
-import utils.RESTUtils;
-
-import java.util.Arrays;
 
 import static spark.Spark.*;
 

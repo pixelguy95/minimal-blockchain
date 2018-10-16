@@ -1,4 +1,4 @@
-package apis.domain;
+package apis.domain.requests;
 
 public class AddrRequest extends Request{
     public String address;

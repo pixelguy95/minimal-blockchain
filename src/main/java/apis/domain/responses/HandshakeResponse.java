@@ -1,6 +1,4 @@
-package apis.domain;
-
-import java.util.List;
+package apis.domain.responses;
 
 /**
  * Needs only return boolean value, can

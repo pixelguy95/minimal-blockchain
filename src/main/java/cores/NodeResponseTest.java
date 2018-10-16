@@ -1,14 +1,10 @@
 package cores;
 
-import apis.domain.HandshakeRequest;
-import apis.domain.HandshakeResponse;
-import com.google.gson.Gson;
-import org.restlet.resource.ClientResource;
+import apis.domain.requests.HandshakeRequest;
+import apis.domain.responses.HandshakeResponse;
 import utils.RESTUtils;
 
 import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Arrays;
 
 public class NodeResponseTest {

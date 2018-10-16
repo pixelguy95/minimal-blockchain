@@ -1,4 +1,4 @@
-package apis.domain;
+package apis.domain.requests;
 
 public abstract class Request {
 

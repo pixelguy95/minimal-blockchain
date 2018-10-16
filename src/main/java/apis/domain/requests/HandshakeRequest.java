@@ -1,4 +1,4 @@
-package apis.domain;
+package apis.domain.requests;
 
 import java.util.List;
 

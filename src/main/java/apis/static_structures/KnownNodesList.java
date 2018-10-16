@@ -1,5 +1,6 @@
 package apis.static_structures;
 
+import apis.domain.Host;
 import db.DBSingletons;
 import org.apache.commons.lang.SerializationUtils;
 import org.iq80.leveldb.DB;
@@ -43,32 +44,5 @@ public class KnownNodesList {
     public static void addNode(Host h) {
         knownNodesList.add(h);
         metaDB.put(KEY, SerializationUtils.serialize(knownNodesList));
-    }
-
-    public static class Host implements Serializable {
-        public String ip;
-        public int port;
-
-        public Host(String ip, int port) {
-            this.ip = ip;
-            this.port = port;
-        }
-
-        public Host(String ipAndPort) {
-            this.ip = ipAndPort.split(":")[0];
-            this.port = Integer.parseInt(ipAndPort.split(":")[1]);
-        }
-
-        public String asURL() {
-            return "http://"+ip+":"+port;
-        }
-
-        public boolean equals(Object o) {
-            return ((Host)o).ip.equals(this.ip) && ((Host)o).port == this.port;
-        }
-
-        public int hashCode() {
-            return Objects.hash(ip, port);
-        }
     }
 }

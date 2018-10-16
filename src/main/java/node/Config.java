@@ -1,6 +1,7 @@
 package node;
 
-import apis.domain.HandshakeRequest;
+import apis.domain.Host;
+import apis.domain.requests.HandshakeRequest;
 import apis.static_structures.Blockchain;
 import apis.static_structures.KnownNodesList;
 import db.DBSingletons;
@@ -66,7 +67,7 @@ public class Config {
 
             if(line.hasOption("n")) {
                 isInitial = false;
-                KnownNodesList.addNode(new KnownNodesList.Host(line.getOptionValue("n")));
+                KnownNodesList.addNode(new Host(line.getOptionValue("n").replace("localhost", outwardIP)));
             }
 
             if(line.hasOption("p")) {
