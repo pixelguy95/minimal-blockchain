@@ -1,19 +1,16 @@
-package cores;
+package garbage;
 
 import domain.transaction.Input;
 import domain.transaction.Output;
 import domain.transaction.Transaction;
 import io.nayuki.bitcoin.crypto.Base58Check;
 import io.nayuki.bitcoin.crypto.Ripemd160;
-import io.nayuki.bitcoin.crypto.Sha256Hash;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.bouncycastle.util.encoders.Base64;
 import script.ScriptBuilder;
 import security.ECKeyManager;
 import security.ECSignatureUtils;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.*;
 import java.util.Arrays;
 import java.util.List;

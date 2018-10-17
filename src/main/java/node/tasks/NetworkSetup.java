@@ -15,8 +15,14 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class NetworkSetup implements Runnable {
+public class NetworkSetup extends AbstractTask {
+
+    public NetworkSetup(AtomicBoolean keepAlive) {
+        super(keepAlive);
+    }
+
     @Override
     public void run() {
         KnownNodesList.getKnownNodes().stream().forEach(n-> System.out.println(n.ip + ":" + n.port));
@@ -49,12 +55,9 @@ public class NetworkSetup implements Runnable {
             for(Host h : gres.knownHosts) {
                 if(!KnownNodesList.getKnownNodes().contains(h) && !me.equals(h)) {
                     nodeQueue.add(h);
-                    KnownNodesList.getKnownNodes().add(h);
+                    KnownNodesList.addNode(h);
                 }
             }
         }
-
-
-        System.out.println("Nodes added, network size: " + (KnownNodesList.getKnownNodes().size() + 1));
     }
 }

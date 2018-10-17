@@ -1,4 +1,4 @@
-package cores;
+package garbage;
 
 import apis.domain.requests.HandshakeRequest;
 import apis.domain.responses.HandshakeResponse;

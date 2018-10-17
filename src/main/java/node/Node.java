@@ -2,9 +2,12 @@ package node;
 
 import apis.BlockAPI;
 import apis.HandshakeAPI;
+import apis.TransactionAPI;
 import com.google.gson.Gson;
 import db.DBSingletons;
 import node.tasks.NetworkSetup;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static spark.Spark.*;
 
@@ -18,7 +21,7 @@ public class Node {
         if(Config.isInitial) {
             initialNode();
         } else {
-            new NetworkSetup().run();
+            new NetworkSetup(new AtomicBoolean(true)).run();
         }
 
         setUpEndPoints();
@@ -42,13 +45,19 @@ public class Node {
         get("/leave/:port", HandshakeAPI::leave, gson::toJson);
 
         /*Blocks*/
-        get("/blockheight", BlockAPI::getCurrentBlockHeight, gson::toJson);
-        get("/block/:id", BlockAPI::getBlock, gson::toJson);
-        post("/new-block", BlockAPI::newBlockFound, gson::toJson);
+        path("/block", () -> {
+            get("/height", BlockAPI::getCurrentBlockHeight, gson::toJson);
+            get("/:id", BlockAPI::getBlock, gson::toJson);
+            post("", BlockAPI::newBlockFound, gson::toJson);
+        });
+
 
         /*Transactions*/
-        /*new-transaction*/
-        /*get-transaction*/
+        path("/transaction", () -> {
+            post("", TransactionAPI::newTransaction, gson::toJson);
+            get("/:txid", TransactionAPI::fetchTransaction, gson::toJson);
+            get("/retransmission/:txid", TransactionAPI::retransmittedTransaction, gson::toJson);
+        });
         /*get-utxo*/
     }
 }

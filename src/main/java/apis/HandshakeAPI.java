@@ -26,10 +26,6 @@ public class HandshakeAPI {
     public static HandshakeResponse handShake(Request request, Response response) {
         HandshakeRequest hsr = new Gson().fromJson(request.body(), HandshakeRequest.class);
 
-        System.out.println(hsr.time);
-        System.out.println(hsr.youAddr);
-        System.out.println(hsr.myAddr);
-
         //TODO: verify version number etc...
         return new HandshakeResponse();
     }
@@ -41,7 +37,7 @@ public class HandshakeAPI {
      * @return
      */
     public static String leave(Request request, Response response) {
-
+        //KnownNodesList.removeNode();
         return "Good bye";
     }
 

@@ -31,7 +31,6 @@ public class KnownNodesList {
                 System.out.println("new empty nodes list");
                 knownNodesList = new HashSet<>();
             }
-
         } finally {
 
         }
@@ -43,6 +42,16 @@ public class KnownNodesList {
 
     public static void addNode(Host h) {
         knownNodesList.add(h);
+        metaDB.put(KEY, SerializationUtils.serialize(knownNodesList));
+    }
+
+    public static void removeNode(Host h) {
+        knownNodesList.remove(h);
+        metaDB.put(KEY, SerializationUtils.serialize(knownNodesList));
+    }
+
+    public static void removeAllNodes(HashSet<Host> all) {
+        knownNodesList.removeAll(all);
         metaDB.put(KEY, SerializationUtils.serialize(knownNodesList));
     }
 }

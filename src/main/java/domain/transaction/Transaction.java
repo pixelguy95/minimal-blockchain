@@ -9,6 +9,7 @@ import security.ECSignatureUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ import java.util.List;
 /**
  * https://en.bitcoin.it/wiki/Transaction
  */
-public class Transaction {
+public class Transaction implements Serializable {
     public int version;
     public short flag;
     public long inCounter;
