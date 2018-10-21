@@ -54,4 +54,15 @@ public class KnownNodesList {
         knownNodesList.removeAll(all);
         metaDB.put(KEY, SerializationUtils.serialize(knownNodesList));
     }
+
+    public static List<Host> getAllNodesUnderIP(String ip) {
+        List<Host> ret = new ArrayList<>();
+        knownNodesList.stream().forEach(node->{
+            if(node.ip.equals(ip)) {
+                ret.add(node);
+            }
+        });
+
+        return ret;
+    }
 }

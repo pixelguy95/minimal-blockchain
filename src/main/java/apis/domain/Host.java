@@ -3,6 +3,8 @@ package apis.domain;
 import apis.static_structures.KnownNodesList;
 
 import java.io.Serializable;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Objects;
 
 public class Host implements Serializable {
@@ -10,12 +12,24 @@ public class Host implements Serializable {
     public int port;
 
     public Host(String ip, int port) {
-        this.ip = ip;
+        InetAddress ipaddress = null;
+        try {
+            ipaddress = InetAddress.getByName(ip);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        this.ip = ipaddress.getHostAddress();
         this.port = port;
     }
 
     public Host(String ipAndPort) {
-        this.ip = ipAndPort.split(":")[0];
+        InetAddress ipaddress = null;
+        try {
+            ipaddress = InetAddress.getByName(ipAndPort.split(":")[0]);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        this.ip = ipaddress.getHostAddress();
         this.port = Integer.parseInt(ipAndPort.split(":")[1]);
     }
 

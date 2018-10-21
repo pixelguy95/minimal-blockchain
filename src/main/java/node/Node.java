@@ -1,6 +1,7 @@
 package node;
 
 import apis.BlockAPI;
+import apis.DebugAPI;
 import apis.HandshakeAPI;
 import apis.TransactionAPI;
 import com.google.gson.Gson;
@@ -59,5 +60,11 @@ public class Node {
             get("/retransmission/:txid", TransactionAPI::retransmittedTransaction, gson::toJson);
         });
         /*get-utxo*/
+
+        /*Debug*/
+        path("/debug", () -> {
+            get("/tx-pool", DebugAPI::getEntireTransactionPool, gson::toJson);
+            get("/tx-pool-ids", DebugAPI::getEntireTransactionPoolIDs, gson::toJson);
+        });
     }
 }
