@@ -48,7 +48,7 @@ public class NetworkSetup extends AbstractTask {
             }
 
             RESTUtils.post(next, "addr", AddrResponse.class, new AddrRequest(Config.outwardIP, Config.port));
-            GetAddrResponse gres = RESTUtils.get(next, "getaddr", GetAddrResponse.class);
+            GetAddrResponse gres = RESTUtils.get(next, "addr", GetAddrResponse.class);
 
             gres.knownHosts.stream().forEach(h-> System.out.println(h.asURL()));
 

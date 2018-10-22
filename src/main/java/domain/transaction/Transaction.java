@@ -84,6 +84,11 @@ public class Transaction implements Serializable {
     }
 
     public static Transaction fromBytes(byte[] bytes) {
+
+        if(bytes == null || bytes.length == 0) {
+            return null;
+        }
+
         ByteBuffer bb = ByteBuffer.wrap(bytes);
 
         int version = bb.getInt();

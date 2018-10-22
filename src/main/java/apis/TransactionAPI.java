@@ -1,7 +1,6 @@
 package apis;
 
 import apis.domain.Host;
-import apis.domain.requests.AddrRequest;
 import apis.domain.requests.NewTransactionRequest;
 import apis.domain.responses.GetTransactionResponse;
 import apis.domain.responses.NewTransactionResponse;
@@ -22,19 +21,15 @@ public class TransactionAPI {
     public static NewTransactionResponse newTransaction(Request request, Response response) {
         Transaction t = new Gson().fromJson(request.body(), NewTransactionRequest.class).transaction;
 
-        if(!TransactionVerifier.verifyTransaction(t)) {
+        if (!TransactionVerifier.verifyTransaction(t)) {
             return (NewTransactionResponse) new NewTransactionResponse().setError("Transaction didn't pass validation");
         }
 
         TransactionPool.getInstance().put(t);
 
-        try {
-            KnownNodesList.getKnownNodes().stream().forEach(node -> {
-                TransactionRESTWrapper.retransmitTransaction(node, t.fullHash());
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        KnownNodesList.getKnownNodes().stream().forEach(node -> {
+            TransactionRESTWrapper.retransmitTransaction(node, t.fullHash());
+        });
 
         return new NewTransactionResponse();
     }
@@ -42,7 +37,7 @@ public class TransactionAPI {
     public static GetTransactionResponse fetchTransaction(Request request, Response response) {
         Transaction t = TransactionPool.getInstance().get(Base64.getUrlDecoder().decode(request.params("txid")));
 
-        if(t!=null) {
+        if (t != null) {
             return new GetTransactionResponse(t);
         }
 
@@ -51,33 +46,26 @@ public class TransactionAPI {
 
     public static TransactionRetransmissionResponse retransmittedTransaction(Request request, Response response) {
 
-        try {
-            byte[] txid = Base64.getUrlDecoder().decode(request.params("txid"));
+        byte[] txid = Base64.getUrlDecoder().decode(request.params("txid"));
 
-            if(TransactionPool.getInstance().has(txid)) {
-                return (TransactionRetransmissionResponse) new TransactionRetransmissionResponse().setError("This transaction has already been transmitted");
-            }
-
-            List<Host> potentialHolders = KnownNodesList.getAllNodesUnderIP(request.ip());
-
-            for(Host h : potentialHolders) {
-                GetTransactionResponse gtr = TransactionRESTWrapper.getTransaction(h, txid);
-
-                if(!gtr.error) {
-                    TransactionPool.getInstance().put(gtr.transaction);
-                    break;
-                }
-            }
-
-            KnownNodesList.getKnownNodes().stream().forEach(node -> {
-                TransactionRESTWrapper.retransmitTransaction(node, txid);
-            });
-
-            return new TransactionRetransmissionResponse();
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (TransactionPool.getInstance().has(txid)) {
+            return (TransactionRetransmissionResponse) new TransactionRetransmissionResponse().setError("This transaction has already been transmitted");
         }
+
+        List<Host> potentialHolders = KnownNodesList.getAllNodesUnderIP(request.ip());
+
+        for (Host h : potentialHolders) {
+            GetTransactionResponse gtr = TransactionRESTWrapper.getTransaction(h, txid);
+
+            if (!gtr.error) {
+                TransactionPool.getInstance().put(gtr.transaction);
+                break;
+            }
+        }
+
+        KnownNodesList.getKnownNodes().stream().forEach(node -> {
+            TransactionRESTWrapper.retransmitTransaction(node, txid);
+        });
 
         return new TransactionRetransmissionResponse();
     }

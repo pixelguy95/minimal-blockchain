@@ -39,11 +39,14 @@ public class Node {
         String version = Node.class.getPackage().getImplementationVersion();
 
         /*Network handling*/
-        get("/version", (req, res) -> version != null ? version : "Unknown (IntelliJ)", gson::toJson);
-        post("/addr", HandshakeAPI::addr, gson::toJson);
-        get("/getaddr", HandshakeAPI::getAddresses, gson::toJson);
+        get("/version", (req, res) -> version != null ? version : "Unknown (IntelliJ/Debug mode)", gson::toJson);
         post("/handshake", HandshakeAPI::handShake, gson::toJson);
-        get("/leave/:port", HandshakeAPI::leave, gson::toJson);
+
+        path("/addr", () -> {
+            post("", HandshakeAPI::addr, gson::toJson);
+            get("", HandshakeAPI::getAddresses, gson::toJson);
+            get("/leave/:port", HandshakeAPI::leave, gson::toJson);
+        });
 
         /*Blocks*/
         path("/block", () -> {

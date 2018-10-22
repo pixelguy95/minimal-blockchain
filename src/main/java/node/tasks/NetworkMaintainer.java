@@ -37,7 +37,7 @@ public class NetworkMaintainer extends AbstractTask{
                     return;
                 }
 
-                List<Host> nodesConnectedToThisNode = RESTUtils.get(host, "getaddr", GetAddrResponse.class).knownHosts;
+                List<Host> nodesConnectedToThisNode = RESTUtils.get(host, "addr", GetAddrResponse.class).knownHosts;
 
                 nodesConnectedToThisNode.stream().forEach(ncttn->{
                     if(!knownNodes.contains(ncttn)) {
