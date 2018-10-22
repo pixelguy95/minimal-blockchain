@@ -11,6 +11,7 @@ import apis.utils.TransactionRESTWrapper;
 import apis.utils.TransactionVerifier;
 import com.google.gson.Gson;
 import domain.transaction.Transaction;
+import node.SpecialJSONSerializer;
 import spark.Request;
 import spark.Response;
 
@@ -19,7 +20,7 @@ import java.util.List;
 
 public class TransactionAPI {
     public static NewTransactionResponse newTransaction(Request request, Response response) {
-        Transaction t = new Gson().fromJson(request.body(), NewTransactionRequest.class).transaction;
+        Transaction t = SpecialJSONSerializer.getInstance().fromJson(request.body(), NewTransactionRequest.class).transaction;
 
         if (!TransactionVerifier.verifyTransaction(t)) {
             return (NewTransactionResponse) new NewTransactionResponse().setError("Transaction didn't pass validation");

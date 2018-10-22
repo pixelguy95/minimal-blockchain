@@ -1,13 +1,12 @@
 package node;
 
-import apis.BlockAPI;
-import apis.DebugAPI;
-import apis.HandshakeAPI;
-import apis.TransactionAPI;
-import com.google.gson.Gson;
+import apis.*;
+import com.google.gson.*;
 import db.DBSingletons;
 import node.tasks.NetworkSetup;
 
+import java.lang.reflect.Type;
+import java.util.Base64;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static spark.Spark.*;
@@ -35,7 +34,9 @@ public class Node {
 
     public static void setUpEndPoints() {
         port(Config.port);
-        Gson gson = new Gson();
+
+        Gson gson = SpecialJSONSerializer.getInstance();
+
         String version = Node.class.getPackage().getImplementationVersion();
 
         /*Network handling*/
@@ -62,6 +63,10 @@ public class Node {
             get("/:txid", TransactionAPI::fetchTransaction, gson::toJson);
             get("/retransmission/:txid", TransactionAPI::retransmittedTransaction, gson::toJson);
         });
+
+        path("/utxo", () -> {
+           get("/:pubkey", UTXOAPI::fetchUTXO, gson::toJson);
+        });
         /*get-utxo*/
 
         /*Debug*/
@@ -69,5 +74,16 @@ public class Node {
             get("/tx-pool", DebugAPI::getEntireTransactionPool, gson::toJson);
             get("/tx-pool-ids", DebugAPI::getEntireTransactionPoolIDs, gson::toJson);
         });
+    }
+
+    private static class ByteArrayToBase64TypeAdapter implements JsonSerializer<byte[]>, JsonDeserializer<byte[]> {
+        public byte[] deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            System.out.println(json.getAsString());
+            return Base64.getUrlDecoder().decode(json.getAsString());
+        }
+
+        public JsonElement serialize(byte[] src, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(Base64.getUrlEncoder().withoutPadding().encodeToString(src));
+        }
     }
 }

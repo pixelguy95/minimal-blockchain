@@ -5,6 +5,7 @@ import apis.domain.requests.Request;
 import apis.domain.responses.Response;
 import apis.static_structures.KnownNodesList;
 import com.google.gson.Gson;
+import node.SpecialJSONSerializer;
 import org.restlet.data.MediaType;
 import org.restlet.resource.ClientResource;
 
@@ -23,7 +24,7 @@ public class RESTUtils {
             ClientResource c = new ClientResource(url + "/" + endpoint + args.stream().map(e->"/".concat(e)).collect(Collectors.joining()));
             Writer writer = new StringWriter();
             c.get().write(writer);
-            return new Gson().fromJson(writer.toString(), returnType);
+            return SpecialJSONSerializer.getInstance().fromJson(writer.toString(), returnType);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -38,7 +39,7 @@ public class RESTUtils {
             ClientResource c = new ClientResource(host.asURL() + "/" + endpoint + args.stream().map(e->"/".concat(e)).collect(Collectors.joining()));
             Writer writer = new StringWriter();
             c.get().write(writer);
-            return new Gson().fromJson(writer.toString(), returnType);
+            return SpecialJSONSerializer.getInstance().fromJson(writer.toString(), returnType);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -53,7 +54,7 @@ public class RESTUtils {
             ClientResource c = new ClientResource(host.asURL() + "/" + endpoint);
             Writer writer = new StringWriter();
             c.get().write(writer);
-            return new Gson().fromJson(writer.toString(), returnType);
+            return SpecialJSONSerializer.getInstance().fromJson(writer.toString(), returnType);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -66,8 +67,8 @@ public class RESTUtils {
         try {
             ClientResource c = new ClientResource(url + "/" + endpoint + args.stream().map(e->"/".concat(e)).collect(Collectors.joining()));
             Writer writer = new StringWriter();
-            c.post(new Gson().toJson(body), MediaType.TEXT_ALL).write(writer);
-            return new Gson().fromJson(writer.toString(), returnType);
+            c.post(SpecialJSONSerializer.getInstance().toJson(body), MediaType.TEXT_ALL).write(writer);
+            return SpecialJSONSerializer.getInstance().fromJson(writer.toString(), returnType);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -80,8 +81,8 @@ public class RESTUtils {
         try {
             ClientResource c = new ClientResource(host.asURL() + "/" + endpoint + args.stream().map(e->"/".concat(e)).collect(Collectors.joining()));
             Writer writer = new StringWriter();
-            c.post(new Gson().toJson(body), MediaType.TEXT_ALL).write(writer);
-            return new Gson().fromJson(writer.toString(), returnType);
+            c.post(SpecialJSONSerializer.getInstance().toJson(body), MediaType.TEXT_ALL).write(writer);
+            return SpecialJSONSerializer.getInstance().fromJson(writer.toString(), returnType);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -94,8 +95,8 @@ public class RESTUtils {
         try {
             ClientResource c = new ClientResource(host.asURL() + "/" + endpoint);
             Writer writer = new StringWriter();
-            c.post(new Gson().toJson(body), MediaType.TEXT_ALL).write(writer);
-            return new Gson().fromJson(writer.toString(), returnType);
+            c.post(SpecialJSONSerializer.getInstance().toJson(body), MediaType.TEXT_ALL).write(writer);
+            return SpecialJSONSerializer.getInstance().fromJson(writer.toString(), returnType);
         } catch (IOException e) {
             e.printStackTrace();
         }
