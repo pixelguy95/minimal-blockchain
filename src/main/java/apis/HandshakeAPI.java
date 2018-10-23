@@ -17,6 +17,12 @@ import java.util.ArrayList;
 
 public class HandshakeAPI {
 
+    private KnownNodesList knownNodesList;
+
+    public HandshakeAPI(KnownNodesList knownNodesList) {
+        this.knownNodesList = knownNodesList;
+    }
+
     /**
      * TODO: Get known nodes from the key value db. Add connector to list, return list
      * @param request
@@ -24,7 +30,7 @@ public class HandshakeAPI {
      * @return
      * @throws IOException
      */
-    public static HandshakeResponse handShake(Request request, Response response) {
+    public HandshakeResponse handShake(Request request, Response response) {
         HandshakeRequest hsr = SpecialJSONSerializer.getInstance().fromJson(request.body(), HandshakeRequest.class);
 
         //TODO: verify version number etc...
@@ -37,18 +43,18 @@ public class HandshakeAPI {
      * @param response
      * @return
      */
-    public static String leave(Request request, Response response) {
+    public String leave(Request request, Response response) {
         //KnownNodesList.removeNode();
         return "Good bye";
     }
 
-    public static AddrResponse addr(Request request, Response response) {
+    public AddrResponse addr(Request request, Response response) {
         AddrRequest hsr = SpecialJSONSerializer.getInstance().fromJson(request.body(), AddrRequest.class);
-        KnownNodesList.addNode(new Host(hsr.address, hsr.port));
+        knownNodesList.addNode(new Host(hsr.address, hsr.port));
         return new AddrResponse();
     }
 
-    public static GetAddrResponse getAddresses(Request request, Response response) {
-        return new GetAddrResponse(new ArrayList<>(KnownNodesList.getKnownNodes()));
+    public GetAddrResponse getAddresses(Request request, Response response) {
+        return new GetAddrResponse(new ArrayList<>(knownNodesList.getKnownNodes()));
     }
 }

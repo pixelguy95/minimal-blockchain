@@ -4,6 +4,7 @@ import db.DBSingletons;
 import domain.block.Block;
 import domain.block.StoredBlock;
 import org.apache.commons.lang.SerializationUtils;
+import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 
 import java.io.IOException;
@@ -13,30 +14,23 @@ import java.util.*;
 
 public class Blockchain {
 
-    private static Blockchain instance = null;
-
-    public static Blockchain getInstance() {
-        if(instance == null) {
-            instance = new Blockchain();
-        }
-
-        return instance;
-    }
-
-    public static void destroy() {
-        instance = null;
-    }
-
     private HashMap<ByteBuffer, StoredBlock> chain;
     private HashMap<ByteBuffer, StoredBlock> leafs;
+    private DB blockDB;
+    private DB metaDB;
+    private DB blockHeaderDB;
 
-    private Blockchain() {
+    public Blockchain(DB blockDB, DB blockHeaderDB, DB metaDB) {
+
+        this.blockDB = blockDB;
+        this.blockHeaderDB = blockHeaderDB;
+        this.metaDB = metaDB;
 
         HashMap<ByteBuffer, StoredBlock> chain = new HashMap<>();
         HashMap<ByteBuffer, StoredBlock> leafs = new HashMap<>();
 
         try {
-            DBIterator iterator = DBSingletons.getBlockHeaderDB().iterator();
+            DBIterator iterator = blockHeaderDB.iterator();
             for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
                 byte[] key = iterator.peekNext().getKey();
                 StoredBlock sb = (StoredBlock) SerializationUtils.deserialize(iterator.peekNext().getValue());
@@ -44,9 +38,9 @@ public class Blockchain {
             }
             iterator.close();
 
-            byte[] leafBytes = DBSingletons.getMetaDB().get("leafkey".getBytes());
+            byte[] leafBytes = metaDB.get("leafkey".getBytes());
             if (leafBytes != null && leafBytes.length != 0) {
-                leafs = (HashMap<ByteBuffer, StoredBlock>) SerializationUtils.deserialize(DBSingletons.getMetaDB().get("leafkey".getBytes()));
+                leafs = (HashMap<ByteBuffer, StoredBlock>) SerializationUtils.deserialize(metaDB.get("leafkey".getBytes()));
             } else {
                 leafs = new HashMap<>();
             }
@@ -60,33 +54,33 @@ public class Blockchain {
         this.leafs = leafs;
     }
 
-    public void addBlock(Block block) throws Exception {
+    public synchronized void addBlock(Block block) throws Exception {
         byte[] newHash = block.header.getHash();
         if (leafs.containsKey(ByteBuffer.wrap(block.header.prevBlockHash))) {
             // new block, add after one of the leaves
             chain.put(ByteBuffer.wrap(newHash), new StoredBlock(leafs.get(ByteBuffer.wrap(block.header.prevBlockHash)).height + 1, block.header));
             leafs.put(ByteBuffer.wrap(newHash), chain.get(ByteBuffer.wrap(newHash)));
             leafs.remove(ByteBuffer.wrap(block.header.prevBlockHash));
-            DBSingletons.getBlockDB().put(newHash, SerializationUtils.serialize(block));
+            blockDB.put(newHash, SerializationUtils.serialize(block));
 
         } else if (chain.containsKey(ByteBuffer.wrap(block.header.prevBlockHash))) {
             // contested block found.
             chain.put(ByteBuffer.wrap(newHash), new StoredBlock(chain.get(ByteBuffer.wrap(block.header.prevBlockHash)).height + 1, block.header));
             leafs.put(ByteBuffer.wrap(newHash), chain.get(ByteBuffer.wrap(newHash)));
-            DBSingletons.getBlockDB().put(newHash, SerializationUtils.serialize(block));
+            blockDB.put(newHash, SerializationUtils.serialize(block));
 
         } else if (chain.size() == 0) {
             // genesis block
             chain.put(ByteBuffer.wrap(newHash), new StoredBlock(0, block.header));
             leafs.put(ByteBuffer.wrap(newHash), chain.get(ByteBuffer.wrap(newHash)));
-            DBSingletons.getBlockDB().put(newHash, SerializationUtils.serialize(block));
+            blockDB.put(newHash, SerializationUtils.serialize(block));
 
         } else {
             throw new Exception("No such prev block");
         }
     }
 
-    public long getBestHeight() {
+    public synchronized long getBestHeight() {
 
         if(leafs.size() == 0) {
             return 0;
@@ -95,18 +89,21 @@ public class Blockchain {
         return leafs.values().stream().mapToLong(l->l.height).max().getAsLong();
     }
 
-    public HashMap<ByteBuffer, StoredBlock> getChain() {
+    public synchronized HashMap<ByteBuffer, StoredBlock> getChain() {
         return chain;
     }
 
-    public HashMap<ByteBuffer, StoredBlock> getLeafs() {
+    public synchronized HashMap<ByteBuffer, StoredBlock> getLeafs() {
         return leafs;
     }
 
-    public void persistLocalVariables() {
-        DBSingletons.getMetaDB().put("leafkey".getBytes(), SerializationUtils.serialize(leafs));
+    /**
+     * This might be really stupid and useless, will probably be removed
+     */
+    public synchronized void persistLocalVariables() {
+        metaDB.put("leafkey".getBytes(), SerializationUtils.serialize(leafs));
         chain.entrySet().stream().forEach(entry -> {
-            DBSingletons.getBlockHeaderDB().put(entry.getKey().array(), SerializationUtils.serialize(entry.getValue()));
+            blockHeaderDB.put(entry.getKey().array(), SerializationUtils.serialize(entry.getValue()));
         });
     }
 }

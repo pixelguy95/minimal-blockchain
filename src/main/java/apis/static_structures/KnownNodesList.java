@@ -7,19 +7,16 @@ import org.iq80.leveldb.DB;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class KnownNodesList {
 
-    private static final byte[] KEY = "hosts".getBytes();
-    private static DB metaDB;
-    private static HashSet<Host> knownNodesList;
+    private final byte[] KEY = "hosts".getBytes();
+    private DB metaDB;
+    private HashSet<Host> knownNodesList;
 
-    static {
-        metaDB = DBSingletons.getMetaDB();
+    public KnownNodesList(DB metaDB) {
+        this.metaDB = metaDB;
         try {
             byte[] serializedList = metaDB.get(KEY);
 
@@ -36,26 +33,37 @@ public class KnownNodesList {
         }
     }
 
-    public static HashSet<Host> getKnownNodes() {
+    public HashSet<Host> getKnownNodes() {
         return knownNodesList;
     }
 
-    public static void addNode(Host h) {
-        knownNodesList.add(h);
-        metaDB.put(KEY, SerializationUtils.serialize(knownNodesList));
+    public synchronized void addNode(Host h) {
+        try {
+            if(metaDB == null) {
+                System.out.println("FAILED");
+            } else {
+
+            }
+
+            knownNodesList.add(h);
+            metaDB.put(KEY, SerializationUtils.serialize(knownNodesList));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
-    public static void removeNode(Host h) {
+    public synchronized void removeNode(Host h) {
         knownNodesList.remove(h);
         metaDB.put(KEY, SerializationUtils.serialize(knownNodesList));
     }
 
-    public static void removeAllNodes(HashSet<Host> all) {
+    public synchronized void removeAllNodes(HashSet<Host> all) {
         knownNodesList.removeAll(all);
         metaDB.put(KEY, SerializationUtils.serialize(knownNodesList));
     }
 
-    public static List<Host> getAllNodesUnderIP(String ip) {
+    public synchronized List<Host> getAllNodesUnderIP(String ip) {
         List<Host> ret = new ArrayList<>();
         knownNodesList.stream().forEach(node->{
             if(node.ip.equals(ip)) {

@@ -14,9 +14,13 @@ import java.util.Arrays;
 
 public class BlockchainTest {
 
+    private Blockchain bc;
+    private DBSingletons dbs;
+
     @Before
     public void setUp() throws Exception {
-        DBSingletons.init(".test-persist");
+        dbs = new DBSingletons(".test-persist");
+        bc = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB());
     }
 
     @Test
@@ -25,8 +29,6 @@ public class BlockchainTest {
         Block genesis = new Block(Arrays.asList(), DigestUtils.sha256("GENESIS BLOCK"), BigInteger.TEN);
         Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), BigInteger.TEN);
         Block block2 = new Block(Arrays.asList(), block1.header.getHash(), BigInteger.TEN);
-
-        Blockchain bc = Blockchain.getInstance();
 
         bc.addBlock(genesis);
         bc.addBlock(block1);
@@ -46,8 +48,6 @@ public class BlockchainTest {
         Block block2 = new Block(Arrays.asList(), block1.header.getHash(), BigInteger.TEN);
         Block block3 = new Block(Arrays.asList(), block1.header.getHash(), BigInteger.ONE);
 
-        Blockchain bc = Blockchain.getInstance();
-
         bc.addBlock(genesis);
         bc.addBlock(block1);
         bc.addBlock(block2);
@@ -65,7 +65,6 @@ public class BlockchainTest {
 
     @After
     public void tearDown() throws Exception {
-        DBSingletons.destroy(".test-persist");
-        Blockchain.destroy();
+        dbs.destroy(".test-persist");
     }
 }

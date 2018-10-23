@@ -19,24 +19,33 @@ import java.util.Base64;
 import java.util.List;
 
 public class TransactionAPI {
-    public static NewTransactionResponse newTransaction(Request request, Response response) {
+
+    private TransactionPool transactionPool;
+    private KnownNodesList knownNodesList;
+
+    public TransactionAPI(TransactionPool transactionPool, KnownNodesList knownNodesList) {
+        this.transactionPool = transactionPool;
+        this.knownNodesList = knownNodesList;
+    }
+
+    public NewTransactionResponse newTransaction(Request request, Response response) {
         Transaction t = SpecialJSONSerializer.getInstance().fromJson(request.body(), NewTransactionRequest.class).transaction;
 
         if (!TransactionVerifier.verifyTransaction(t)) {
             return (NewTransactionResponse) new NewTransactionResponse().setError("Transaction didn't pass validation");
         }
 
-        TransactionPool.getInstance().put(t);
+        transactionPool.put(t);
 
-        KnownNodesList.getKnownNodes().stream().forEach(node -> {
+        knownNodesList.getKnownNodes().stream().forEach(node -> {
             TransactionRESTWrapper.retransmitTransaction(node, t.fullHash());
         });
 
         return new NewTransactionResponse();
     }
 
-    public static GetTransactionResponse fetchTransaction(Request request, Response response) {
-        Transaction t = TransactionPool.getInstance().get(Base64.getUrlDecoder().decode(request.params("txid")));
+    public GetTransactionResponse fetchTransaction(Request request, Response response) {
+        Transaction t = transactionPool.get(Base64.getUrlDecoder().decode(request.params("txid")));
 
         if (t != null) {
             return new GetTransactionResponse(t);
@@ -45,26 +54,26 @@ public class TransactionAPI {
         return (GetTransactionResponse) new GetTransactionResponse(null).setError("No transaction with that txid: " + request.params("txid"));
     }
 
-    public static TransactionRetransmissionResponse retransmittedTransaction(Request request, Response response) {
+    public TransactionRetransmissionResponse retransmittedTransaction(Request request, Response response) {
 
         byte[] txid = Base64.getUrlDecoder().decode(request.params("txid"));
 
-        if (TransactionPool.getInstance().has(txid)) {
+        if (transactionPool.has(txid)) {
             return (TransactionRetransmissionResponse) new TransactionRetransmissionResponse().setError("This transaction has already been transmitted");
         }
 
-        List<Host> potentialHolders = KnownNodesList.getAllNodesUnderIP(request.ip());
+        List<Host> potentialHolders = knownNodesList.getAllNodesUnderIP(request.ip());
 
         for (Host h : potentialHolders) {
             GetTransactionResponse gtr = TransactionRESTWrapper.getTransaction(h, txid);
 
             if (!gtr.error) {
-                TransactionPool.getInstance().put(gtr.transaction);
+                transactionPool.put(gtr.transaction);
                 break;
             }
         }
 
-        KnownNodesList.getKnownNodes().stream().forEach(node -> {
+        knownNodesList.getKnownNodes().stream().forEach(node -> {
             TransactionRESTWrapper.retransmitTransaction(node, txid);
         });
 

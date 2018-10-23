@@ -1,6 +1,9 @@
 package node;
 
 import apis.*;
+import apis.static_structures.Blockchain;
+import apis.static_structures.KnownNodesList;
+import apis.static_structures.TransactionPool;
 import com.google.gson.*;
 import db.DBSingletons;
 import node.tasks.NetworkSetup;
@@ -19,26 +22,53 @@ public class Node {
         new Node(args);
     }
 
-    public Node(String[] args) {
-        Config.parse(args);
+    private Service http;
 
-        if(Config.isInitial) {
-            initialNode();
-        } else {
-            new NetworkSetup(new AtomicBoolean(true)).run();
+    public Config config;
+
+    private DBSingletons dbs;
+    private DebugAPI debugAPI;
+    private TransactionAPI transactionAPI;
+    private HandshakeAPI handshakeAPI;
+    private BlockAPI blockAPI;
+
+    public TransactionPool transactionPool;
+    public KnownNodesList knownNodesList;
+    public Blockchain blockchain;
+
+    public Node(String[] args) {
+        config = new Config(args);
+
+        dbs = new DBSingletons(config.dbFolder);
+        if(config.isInitial) {
+            initialNode(config);
         }
 
-        setUpEndPoints();
+        transactionPool = new TransactionPool(dbs.getTransactionDB());
+        knownNodesList = new KnownNodesList(dbs.getMetaDB());
+        blockchain = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB());
+
+        transactionAPI = new TransactionAPI(transactionPool, knownNodesList);
+        debugAPI = new DebugAPI(transactionPool);
+        handshakeAPI = new HandshakeAPI(knownNodesList);
+        blockAPI = new BlockAPI(blockchain);
+
+        if(!config.isInitial) {
+            knownNodesList.addNode(config.initialConnection);
+            new NetworkSetup(new AtomicBoolean(true), config, knownNodesList, blockchain).run();
+        }
+
+        setUpEndPoints(config);
     }
 
-    public static void initialNode() {
-        DBSingletons.destroy(Config.dbFolder);
-        DBSingletons.init(Config.dbFolder);
+    public void initialNode(Config config) {
+        dbs.destroy(config.dbFolder);
+        dbs.restart(config.dbFolder);
     }
 
-    public static void setUpEndPoints() {
-        Service http = Service.ignite();
-        http.port(Config.port);
+    public void setUpEndPoints(Config config) {
+        http = Service.ignite();
+        http.port(config.port);
 
         Gson gson = SpecialJSONSerializer.getInstance();
 
@@ -46,27 +76,27 @@ public class Node {
 
         /*Network handling*/
         http.get("/version", (req, res) -> version != null ? version : "Unknown (IntelliJ/Debug mode)", gson::toJson);
-        http.post("/handshake", HandshakeAPI::handShake, gson::toJson);
+        http.post("/handshake", handshakeAPI::handShake, gson::toJson);
 
         http.path("/addr", () -> {
-            http.post("", HandshakeAPI::addr, gson::toJson);
-            http.get("", HandshakeAPI::getAddresses, gson::toJson);
-            http.get("/leave/:port", HandshakeAPI::leave, gson::toJson);
+            http.post("", handshakeAPI::addr, gson::toJson);
+            http.get("", handshakeAPI::getAddresses, gson::toJson);
+            http.get("/leave/:port", handshakeAPI::leave, gson::toJson);
         });
 
         /*Blocks*/
         http.path("/block", () -> {
-            http.get("/height", BlockAPI::getCurrentBlockHeight, gson::toJson);
-            http.get("/:id", BlockAPI::getBlock, gson::toJson);
-            http.post("", BlockAPI::newBlockFound, gson::toJson);
+            http.get("/height", blockAPI::getCurrentBlockHeight, gson::toJson);
+            http.get("/:id", blockAPI::getBlock, gson::toJson);
+            http.post("", blockAPI::newBlockFound, gson::toJson);
         });
 
 
         /*Transactions*/
         http.path("/transaction", () -> {
-            http.post("", TransactionAPI::newTransaction, gson::toJson);
-            http.get("/:txid", TransactionAPI::fetchTransaction, gson::toJson);
-            http.get("/retransmission/:txid", TransactionAPI::retransmittedTransaction, gson::toJson);
+            http.post("", transactionAPI::newTransaction, gson::toJson);
+            http.get("/:txid", transactionAPI::fetchTransaction, gson::toJson);
+            http.get("/retransmission/:txid", transactionAPI::retransmittedTransaction, gson::toJson);
         });
 
         http.path("/utxo", () -> {
@@ -76,19 +106,16 @@ public class Node {
 
         /*Debug*/
         http.path("/debug", () -> {
-            http.get("/tx-pool", DebugAPI::getEntireTransactionPool, gson::toJson);
-            http.get("/tx-pool-ids", DebugAPI::getEntireTransactionPoolIDs, gson::toJson);
+            http.get("/tx-pool", debugAPI::getEntireTransactionPool, gson::toJson);
+            http.get("/tx-pool-ids", debugAPI::getEntireTransactionPoolIDs, gson::toJson);
         });
     }
 
-    private static class ByteArrayToBase64TypeAdapter implements JsonSerializer<byte[]>, JsonDeserializer<byte[]> {
-        public byte[] deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-            System.out.println(json.getAsString());
-            return Base64.getUrlDecoder().decode(json.getAsString());
-        }
+    public void kill() {
+        http.stop();
+    }
 
-        public JsonElement serialize(byte[] src, Type typeOfSrc, JsonSerializationContext context) {
-            return new JsonPrimitive(Base64.getUrlEncoder().withoutPadding().encodeToString(src));
-        }
+    public void destroyPersistantData() {
+        dbs.destroy(config.dbFolder);
     }
 }

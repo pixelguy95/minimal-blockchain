@@ -6,7 +6,9 @@ import apis.domain.requests.HandshakeRequest;
 import apis.domain.responses.AddrResponse;
 import apis.domain.responses.GetAddrResponse;
 import apis.domain.responses.HandshakeResponse;
+import apis.static_structures.Blockchain;
 import apis.static_structures.KnownNodesList;
+import block.Block;
 import node.Config;
 import utils.RESTUtils;
 
@@ -19,15 +21,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NetworkSetup extends AbstractTask {
 
-    public NetworkSetup(AtomicBoolean keepAlive) {
+    private KnownNodesList knownNodesList;
+    private Blockchain blockchain;
+    private Config config;
+
+    public NetworkSetup(AtomicBoolean keepAlive, Config config, KnownNodesList knownNodesList, Blockchain blockchain) {
         super(keepAlive);
+        this.config = config;
+        this.knownNodesList = knownNodesList;
+        this.blockchain = blockchain;
     }
 
     @Override
     public void run() {
-        KnownNodesList.getKnownNodes().stream().forEach(n-> System.out.println(n.ip + ":" + n.port));
-        HandshakeRequest hsr = Config.generateHandShakeRequest(KnownNodesList.getKnownNodes().iterator().next().asURL());
-        HandshakeResponse response = RESTUtils.post(KnownNodesList.getKnownNodes().iterator().next(), "handshake", HandshakeResponse.class, hsr);
+        knownNodesList.getKnownNodes().stream().forEach(n-> System.out.println(n.ip + ":" + n.port));
+        HandshakeRequest hsr = config.generateHandShakeRequest(knownNodesList.getKnownNodes().iterator().next().asURL(), blockchain.getBestHeight());
+        HandshakeResponse response = RESTUtils.post(knownNodesList.getKnownNodes().iterator().next(), "handshake", HandshakeResponse.class, hsr);
 
         if(response.error) {
             System.err.println(response.errorMessage);
@@ -35,9 +44,9 @@ public class NetworkSetup extends AbstractTask {
         }
 
         LinkedList<Host> nodeQueue = new LinkedList<>();
-        nodeQueue.add(KnownNodesList.getKnownNodes().iterator().next());
+        nodeQueue.add(knownNodesList.getKnownNodes().iterator().next());
 
-        Host me = new Host(Config.outwardIP, Config.port);
+        Host me = new Host(config.outwardIP, config.port);
 
         while(!nodeQueue.isEmpty()) {
             Host next = nodeQueue.poll();
@@ -47,15 +56,15 @@ public class NetworkSetup extends AbstractTask {
                 break;
             }
 
-            RESTUtils.post(next, "addr", AddrResponse.class, new AddrRequest(Config.outwardIP, Config.port));
+            RESTUtils.post(next, "addr", AddrResponse.class, new AddrRequest(config.outwardIP, config.port));
             GetAddrResponse gres = RESTUtils.get(next, "addr", GetAddrResponse.class);
 
             gres.knownHosts.stream().forEach(h-> System.out.println(h.asURL()));
 
             for(Host h : gres.knownHosts) {
-                if(!KnownNodesList.getKnownNodes().contains(h) && !me.equals(h)) {
+                if(!knownNodesList.getKnownNodes().contains(h) && !me.equals(h)) {
                     nodeQueue.add(h);
-                    KnownNodesList.addNode(h);
+                    knownNodesList.addNode(h);
                 }
             }
         }

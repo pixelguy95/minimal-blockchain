@@ -10,6 +10,7 @@ import org.apache.commons.cli.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -19,17 +20,18 @@ public class Config {
 
     //TODO: load version number etc from file or something.
     // The data for the handshake, node specific.
-    public static final int version = 1;
-    public static final String subVersion = "minimal-blockchain-core0.0.1";
-    public static final List<String> services = Arrays.asList(HandshakeRequest.NODE_NETWORK);
+    public final int version = 1;
+    public final String subVersion = "minimal-blockchain-core0.0.1";
+    public final List<String> services = Arrays.asList(HandshakeRequest.NODE_NETWORK);
 
-    public static int port = 30109;
-    public static String dbFolder = ".local-persistence";
-    public static boolean isInitial = false;
+    public int port = 30109;
+    public String dbFolder = ".local-persistence";
+    public boolean isInitial = false;
 
-    public static String outwardIP;
+    public String outwardIP;
+    public Host initialConnection;
 
-    static {
+    public Config(String args[]) {
         URL url = null;
         try {
             url = new URL("http://checkip.amazonaws.com/");
@@ -41,9 +43,6 @@ public class Config {
             e.printStackTrace();
         }
 
-    }
-
-    public static void parse(String[] args) {
 
         try {
             CommandLineParser parser = new DefaultParser();
@@ -63,11 +62,9 @@ public class Config {
                 dbFolder = line.getOptionValue("f");
             }
 
-            DBSingletons.init(dbFolder);
-
             if(line.hasOption("n")) {
                 isInitial = false;
-                KnownNodesList.addNode(new Host(line.getOptionValue("n").replace("localhost", outwardIP)));
+                initialConnection = new Host(line.getOptionValue("n").replace("localhost", outwardIP));
             }
 
             if(line.hasOption("p")) {
@@ -78,9 +75,10 @@ public class Config {
         } catch (ParseException e) {
             e.printStackTrace();
         }
+
     }
 
-    private static Options getCLIParseOptions() {
+    private Options getCLIParseOptions() {
         Options options = new Options();
         options.addOption( "i", "initialNode", false, "if this is the initialNode node in your " +
                 "blockchain give this option\n\n" +
@@ -100,8 +98,8 @@ public class Config {
         return options;
     }
 
-    public static HandshakeRequest generateHandShakeRequest(String youAddr) {
-        return new HandshakeRequest(version, services, System.currentTimeMillis(), youAddr, outwardIP, (short) port, subVersion, Blockchain.getInstance().getBestHeight());
+    public HandshakeRequest generateHandShakeRequest(String youAddr, long bestHeight) {
+        return new HandshakeRequest(version, services, System.currentTimeMillis(), youAddr, outwardIP, (short) port, subVersion, bestHeight);
     }
 
 }

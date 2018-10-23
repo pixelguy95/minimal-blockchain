@@ -18,15 +18,15 @@ public class DBSingletons {
     public static final String TRANSACTION_FOLDER = "/transaction-local";
     public static final String POOL_FOLDER = "/pool-local";
 
-    private static DBFactory factory;
-    private static DB blockDB = null;
-    private static DB blockHeaderDB = null;
-    private static DB leafDB = null;
-    private static DB metaDB = null;
-    private static DB transactionDB = null;
-    private static DB poolDB = null;
+    private DBFactory factory;
+    private DB blockDB = null;
+    private DB blockHeaderDB = null;
+    private DB leafDB = null;
+    private DB metaDB = null;
+    private DB transactionDB = null;
+    private DB poolDB = null;
 
-    public static void init(String dbFolder){
+    public DBSingletons(String dbFolder){
         Options options = new Options();
         options.createIfMissing(true);
         try {
@@ -48,7 +48,7 @@ public class DBSingletons {
         }
     }
 
-    public static void destroy(String dbFolder) {
+    public void destroy(String dbFolder) {
         Options options = new Options();
         try {
             blockDB.close();
@@ -71,31 +71,53 @@ public class DBSingletons {
         }
     }
 
-    public static DBFactory getFactory() {
+    public DBFactory getFactory() {
         return factory;
     }
 
-    public static DB getBlockDB() {
+    public DB getBlockDB() {
         return blockDB;
     }
 
-    public static DB getMetaDB() {
+    public DB getMetaDB() {
         return metaDB;
     }
 
-    public static DB getTransactionDB() {
+    public DB getTransactionDB() {
         return transactionDB;
     }
 
-    public static DB getBlockHeaderDB() {
+    public DB getBlockHeaderDB() {
         return blockHeaderDB;
     }
 
-    public static DB getLeafDB() {
+    public DB getLeafDB() {
         return leafDB;
     }
 
-    public static DB getPoolDB() {
+    public DB getPoolDB() {
         return poolDB;
+    }
+
+    public void restart(String dbFolder) {
+        Options options = new Options();
+        options.createIfMissing(true);
+        try {
+            factory = (DBFactory) Node.class.getClassLoader().loadClass(System.getProperty("leveldb.factory", "org.iq80.leveldb.impl.Iq80DBFactory")).newInstance();
+            blockDB = factory.open(new File(dbFolder + BLOCK_FOLDER), options);
+            blockHeaderDB = factory.open(new File(dbFolder + BLOCKHEADER_FOLDER), options);
+            leafDB = factory.open(new File(dbFolder + LEAF_FOLDER), options);
+            metaDB = factory.open(new File(dbFolder + META_FOLDER), options);
+            transactionDB = factory.open(new File(dbFolder + TRANSACTION_FOLDER), options);
+            poolDB = factory.open(new File(dbFolder + POOL_FOLDER), options);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }

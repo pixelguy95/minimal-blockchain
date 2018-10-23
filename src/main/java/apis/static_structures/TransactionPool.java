@@ -18,35 +18,25 @@ import java.util.List;
  */
 public class TransactionPool {
 
-    private static TransactionPool instance;
-
-    public static TransactionPool getInstance() {
-        if(instance == null) {
-            instance = new TransactionPool();
-        }
-
-        return instance;
-    }
-
     private DB transactionPoolDB;
 
-    private TransactionPool() {
-        transactionPoolDB = DBSingletons.getPoolDB();
+    public TransactionPool(DB transactionPoolDB) {
+        this.transactionPoolDB = transactionPoolDB;
     }
 
-    public Transaction get(byte[] key) {
+    public synchronized Transaction get(byte[] key) {
         return Transaction.fromBytes(transactionPoolDB.get(key));
     }
 
-    public void put(Transaction t) {
+    public synchronized void put(Transaction t) {
         transactionPoolDB.put(t.fullHash(), t.serialize());
     }
 
-    public boolean has(byte[] key) {
+    public synchronized boolean has(byte[] key) {
         return transactionPoolDB.get(key) != null;
     }
 
-    public List<Transaction> getAll() {
+    public synchronized List<Transaction> getAll() {
 
         List<Transaction> all = new ArrayList<>();
         DBIterator iterator = transactionPoolDB.iterator();

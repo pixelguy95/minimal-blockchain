@@ -1,5 +1,6 @@
 package apis;
 
+import apis.static_structures.Blockchain;
 import block.Block;
 import spark.Request;
 import spark.Response;
@@ -7,12 +8,19 @@ import spark.Response;
 import java.math.BigInteger;
 
 public class BlockAPI {
-    public static BigInteger getCurrentBlockHeight(Request request, Response response) {
 
-        return null;
+    private Blockchain blockchain;
+
+    public BlockAPI(Blockchain blockchain) {
+        this.blockchain = blockchain;
     }
 
-    public static Block getBlock(Request request, Response response) {
+    public BigInteger getCurrentBlockHeight(Request request, Response response) {
+
+        return new BigInteger(String.valueOf(blockchain.getBestHeight()));
+    }
+
+    public Block getBlock(Request request, Response response) {
 
         return null;
     }
@@ -23,7 +31,7 @@ public class BlockAPI {
      * @param response
      * @return
      */
-    public static String newBlockFound(Request request, Response response) {
+    public String newBlockFound(Request request, Response response) {
 
         return null;
     }
