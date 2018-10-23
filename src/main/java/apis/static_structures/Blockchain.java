@@ -15,14 +15,9 @@ public class Blockchain {
 
     private static Blockchain instance = null;
 
-    public Blockchain(HashMap<ByteBuffer, StoredBlock> chain, HashMap<ByteBuffer, StoredBlock> leafs) {
-        this.chain = chain;
-        this.leafs = leafs;
-    }
-
     public static Blockchain getInstance() {
         if(instance == null) {
-            instance = newInstance();
+            instance = new Blockchain();
         }
 
         return instance;
@@ -35,7 +30,7 @@ public class Blockchain {
     private HashMap<ByteBuffer, StoredBlock> chain;
     private HashMap<ByteBuffer, StoredBlock> leafs;
 
-    private static Blockchain newInstance() {
+    private Blockchain() {
 
         HashMap<ByteBuffer, StoredBlock> chain = new HashMap<>();
         HashMap<ByteBuffer, StoredBlock> leafs = new HashMap<>();
@@ -61,7 +56,8 @@ public class Blockchain {
             e.printStackTrace();
         }
 
-        return new Blockchain(chain, leafs);
+        this.chain = chain;
+        this.leafs = leafs;
     }
 
     public void addBlock(Block block) throws Exception {

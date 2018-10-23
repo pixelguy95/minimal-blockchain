@@ -9,13 +9,17 @@ import java.lang.reflect.Type;
 import java.util.Base64;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static spark.Spark.*;
+import spark.Service;
+import spark.Spark;
 
 public class Node {
 
-    public static void main(String[] args) throws Exception {
-
+    public static void main(String[] args) {
         Runtime.getRuntime().addShutdownHook(new ShutdownHook());
+        new Node(args);
+    }
+
+    public Node(String[] args) {
         Config.parse(args);
 
         if(Config.isInitial) {
@@ -33,46 +37,47 @@ public class Node {
     }
 
     public static void setUpEndPoints() {
-        port(Config.port);
+        Service http = Service.ignite();
+        http.port(Config.port);
 
         Gson gson = SpecialJSONSerializer.getInstance();
 
         String version = Node.class.getPackage().getImplementationVersion();
 
         /*Network handling*/
-        get("/version", (req, res) -> version != null ? version : "Unknown (IntelliJ/Debug mode)", gson::toJson);
-        post("/handshake", HandshakeAPI::handShake, gson::toJson);
+        http.get("/version", (req, res) -> version != null ? version : "Unknown (IntelliJ/Debug mode)", gson::toJson);
+        http.post("/handshake", HandshakeAPI::handShake, gson::toJson);
 
-        path("/addr", () -> {
-            post("", HandshakeAPI::addr, gson::toJson);
-            get("", HandshakeAPI::getAddresses, gson::toJson);
-            get("/leave/:port", HandshakeAPI::leave, gson::toJson);
+        http.path("/addr", () -> {
+            http.post("", HandshakeAPI::addr, gson::toJson);
+            http.get("", HandshakeAPI::getAddresses, gson::toJson);
+            http.get("/leave/:port", HandshakeAPI::leave, gson::toJson);
         });
 
         /*Blocks*/
-        path("/block", () -> {
-            get("/height", BlockAPI::getCurrentBlockHeight, gson::toJson);
-            get("/:id", BlockAPI::getBlock, gson::toJson);
-            post("", BlockAPI::newBlockFound, gson::toJson);
+        http.path("/block", () -> {
+            http.get("/height", BlockAPI::getCurrentBlockHeight, gson::toJson);
+            http.get("/:id", BlockAPI::getBlock, gson::toJson);
+            http.post("", BlockAPI::newBlockFound, gson::toJson);
         });
 
 
         /*Transactions*/
-        path("/transaction", () -> {
-            post("", TransactionAPI::newTransaction, gson::toJson);
-            get("/:txid", TransactionAPI::fetchTransaction, gson::toJson);
-            get("/retransmission/:txid", TransactionAPI::retransmittedTransaction, gson::toJson);
+        http.path("/transaction", () -> {
+            http.post("", TransactionAPI::newTransaction, gson::toJson);
+            http.get("/:txid", TransactionAPI::fetchTransaction, gson::toJson);
+            http.get("/retransmission/:txid", TransactionAPI::retransmittedTransaction, gson::toJson);
         });
 
-        path("/utxo", () -> {
-           get("/:pubkey", UTXOAPI::fetchUTXO, gson::toJson);
+        http.path("/utxo", () -> {
+            http.get("/:pubkey", UTXOAPI::fetchUTXO, gson::toJson);
         });
         /*get-utxo*/
 
         /*Debug*/
-        path("/debug", () -> {
-            get("/tx-pool", DebugAPI::getEntireTransactionPool, gson::toJson);
-            get("/tx-pool-ids", DebugAPI::getEntireTransactionPoolIDs, gson::toJson);
+        http.path("/debug", () -> {
+            http.get("/tx-pool", DebugAPI::getEntireTransactionPool, gson::toJson);
+            http.get("/tx-pool-ids", DebugAPI::getEntireTransactionPoolIDs, gson::toJson);
         });
     }
 
