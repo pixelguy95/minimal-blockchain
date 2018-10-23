@@ -30,6 +30,7 @@ public class Config {
 
     public String outwardIP;
     public Host initialConnection;
+    public boolean allowOrphanBlocks = false;
 
     public Config(String args[]) {
         URL url = null;

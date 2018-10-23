@@ -21,6 +21,10 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
+/**
+ * IMPORTANT!
+ * You must port forward 13337/13340 to the computer you are running on
+ */
 public class NodeTest {
 
     private static final String[] initialNodeArgs = new String[]{"-i", "-p", "13337", "-db", ".local-persistence-test1"};
@@ -36,6 +40,7 @@ public class NodeTest {
     @Before
     public void setUp() throws Exception {
         node1 = new Node(initialNodeArgs);
+        System.out.println();
         Thread.sleep(200);
         node2 = new Node(secondNodeArgs);
         Thread.sleep(200);

@@ -46,7 +46,7 @@ public class Node {
 
         transactionPool = new TransactionPool(dbs.getTransactionDB());
         knownNodesList = new KnownNodesList(dbs.getMetaDB());
-        blockchain = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB());
+        blockchain = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config);
 
         transactionAPI = new TransactionAPI(transactionPool, knownNodesList);
         debugAPI = new DebugAPI(transactionPool);
