@@ -60,7 +60,7 @@ public class Node {
         transactionAPI = new TransactionAPI(transactionPool, knownNodesList);
         debugAPI = new DebugAPI(transactionPool);
         handshakeAPI = new HandshakeAPI(knownNodesList);
-        blockAPI = new BlockAPI(blockchain, config);
+        blockAPI = new BlockAPI(blockchain, knownNodesList, config);
         utxoAPI = new UTXOAPI();
 
         if(!config.isInitial) {

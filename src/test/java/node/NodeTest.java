@@ -1,10 +1,12 @@
 package node;
 
 import apis.domain.Host;
+import apis.utils.BlockRESTWrapper;
 import apis.utils.TransactionRESTWrapper;
 import domain.transaction.Input;
 import domain.transaction.Output;
 import domain.transaction.Transaction;
+import domain.block.Block;
 import io.nayuki.bitcoin.crypto.Ripemd160;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.After;
@@ -15,6 +17,8 @@ import script.ScriptBuilder;
 import security.ECKeyManager;
 import security.ECSignatureUtils;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.List;
@@ -40,12 +44,16 @@ public class NodeTest {
     @Before
     public void setUp() throws Exception {
         node1 = new Node(initialNodeArgs);
+        node1.config.verifyNewBlocks = false;
         Thread.sleep(200);
         node2 = new Node(secondNodeArgs);
+        node2.config.verifyNewBlocks = false;
         Thread.sleep(200);
         node3 = new Node(thirdNodeArgs);
+        node3.config.verifyNewBlocks = false;
         Thread.sleep(200);
         node4 = new Node(fourthNodeArgs);
+        node4.config.verifyNewBlocks = false;
         Thread.sleep(200);
     }
 
@@ -123,5 +131,28 @@ public class NodeTest {
         Assert.assertTrue(node2.transactionPool.has(t.fullHash()));
         Assert.assertTrue(node3.transactionPool.has(t.fullHash()));
         Assert.assertTrue(node4.transactionPool.has(t.fullHash()));
+    }
+
+
+    /**
+     * This will work until we add transaction validation, then it will need modifications
+     *
+     * Sends a fake transaction to node 1, then waits for a bit, then checks if all nodes has that transaction in their
+     * respective transaction pool
+     * @throws InterruptedException
+     */
+    @Test
+    public void blockRetransmission() throws InterruptedException {
+
+        Block genesis = Block.generateGenesisBlock();
+        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), BigInteger.TEN);
+
+        BlockRESTWrapper.newBlock(new Host(node1.config.outwardIP, node1.config.port), block1);
+        Thread.sleep(100); //Wait for transaction to spread to all nodes
+
+        assertTrue(node1.blockchain.getChain().containsKey(ByteBuffer.wrap(block1.header.getHash())));
+        assertTrue(node2.blockchain.getChain().containsKey(ByteBuffer.wrap(block1.header.getHash())));
+        assertTrue(node3.blockchain.getChain().containsKey(ByteBuffer.wrap(block1.header.getHash())));
+        assertTrue(node4.blockchain.getChain().containsKey(ByteBuffer.wrap(block1.header.getHash())));
     }
 }

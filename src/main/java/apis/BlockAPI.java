@@ -1,13 +1,14 @@
 package apis;
 
+import apis.domain.Host;
 import apis.domain.requests.NewBlockFoundRequest;
 import apis.domain.requests.NewTransactionRequest;
-import apis.domain.responses.BlockHeightResponse;
-import apis.domain.responses.BooleanResponse;
-import apis.domain.responses.GetAllBlockHashesResponse;
-import apis.domain.responses.GetBlockResponse;
+import apis.domain.responses.*;
 import apis.static_structures.Blockchain;
+import apis.static_structures.KnownNodesList;
+import apis.utils.BlockRESTWrapper;
 import apis.utils.BlockVerifier;
+import apis.utils.TransactionRESTWrapper;
 import domain.block.Block;
 import domain.transaction.Transaction;
 import node.Config;
@@ -24,10 +25,12 @@ import java.util.stream.Collectors;
 public class BlockAPI {
 
     private Blockchain blockchain;
+    private KnownNodesList knownNodesList;
     private Config config;
 
-    public BlockAPI(Blockchain blockchain, Config config) {
+    public BlockAPI(Blockchain blockchain, KnownNodesList knownNodesList, Config config) {
         this.blockchain = blockchain;
+        this.knownNodesList = knownNodesList;
         this.config = config;
     }
 
@@ -60,14 +63,48 @@ public class BlockAPI {
 
         blockchain.addBlock(b);
         System.out.println("ADDED " + Base64.getUrlEncoder().withoutPadding().encodeToString(b.header.getHash()));
-        //TODO: RETRANSMIT
+
+        knownNodesList.getKnownNodes().stream().forEach(node -> {
+            BlockRESTWrapper.retransmitBlock(node, b.header.getHash());
+        });
 
         return new BooleanResponse();
     }
 
-    public String retransmittedBlock(Request request, Response response) {
+    public BooleanResponse retransmittedBlock(Request request, Response response) {
 
-        return "Implement me!";
+        byte[] blockhash = Base64.getUrlDecoder().decode(request.params("blockhash"));
+
+        if(blockchain.getChain().containsKey(ByteBuffer.wrap(blockhash)))
+            return (BooleanResponse) new BooleanResponse().setError("Already have that block");
+
+        List<Host> potentialHolders = knownNodesList.getAllNodesUnderIP(request.ip());
+
+        for (Host h : potentialHolders) {
+            GetBlockResponse gbr = BlockRESTWrapper.getBlock(h, blockhash);
+
+            if (!gbr.error) {
+
+                if(config.verifyNewBlocks) {
+                    if(BlockVerifier.verifyBlock(gbr.block)) {
+                        blockchain.addBlock(gbr.block);
+                        break;
+                    } else {
+                        return (BooleanResponse) new BooleanResponse().setError("Faulty block received");
+                    }
+                } else {
+                    blockchain.addBlock(gbr.block);
+                    break;
+                }
+
+            }
+        }
+
+        knownNodesList.getKnownNodes().stream().forEach(node -> {
+            BlockRESTWrapper.retransmitBlock(node, blockhash);
+        });
+
+        return new BooleanResponse();
     }
 
     public GetAllBlockHashesResponse getAllBlockHashes(Request request, Response response) {

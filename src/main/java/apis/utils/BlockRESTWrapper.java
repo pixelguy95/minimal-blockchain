@@ -2,10 +2,7 @@ package apis.utils;
 
 import apis.domain.Host;
 import apis.domain.requests.NewBlockFoundRequest;
-import apis.domain.responses.BlockHeightResponse;
-import apis.domain.responses.BooleanResponse;
-import apis.domain.responses.GetAllBlockHashesResponse;
-import apis.domain.responses.GetBlockResponse;
+import apis.domain.responses.*;
 import domain.block.Block;
 import utils.RESTUtils;
 
@@ -30,5 +27,9 @@ public class BlockRESTWrapper {
 
     public static BooleanResponse newBlock(Host host, Block b) {
         return RESTUtils.post(host, "block", BooleanResponse.class, new NewBlockFoundRequest(b));
+    }
+
+    public static TransactionRetransmissionResponse retransmitBlock(Host host, byte[] txid) {
+        return RESTUtils.get(host, "block/retransmission", TransactionRetransmissionResponse.class, Arrays.asList(Base64.getUrlEncoder().withoutPadding().encodeToString(txid)));
     }
 }
