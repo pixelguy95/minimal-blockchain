@@ -4,7 +4,7 @@
 //import apis.domain.requests.HandshakeRequest;
 //import apis.static_structures.Blockchain;
 //import apis.static_structures.KnownNodesList;
-//import db.DBSingletons;
+//import db.DBHolder;
 //import org.apache.commons.cli.*;
 //
 //import java.io.BufferedReader;
@@ -63,7 +63,7 @@
 //                dbFolder = line.getOptionValue("f");
 //            }
 //
-//            DBSingletons.init(dbFolder);
+//            DBHolder.init(dbFolder);
 //
 //            if(line.hasOption("n")) {
 //                isInitial = false;

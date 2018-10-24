@@ -5,15 +5,18 @@ import apis.static_structures.Blockchain;
 import apis.static_structures.KnownNodesList;
 import apis.static_structures.TransactionPool;
 import com.google.gson.*;
-import db.DBSingletons;
+import db.DBHolder;
+import domain.block.Block;
 import node.tasks.NetworkSetup;
 
-import java.lang.reflect.Type;
+import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import spark.Service;
-import spark.Spark;
 
 public class Node {
 
@@ -26,7 +29,7 @@ public class Node {
 
     public Config config;
 
-    private DBSingletons dbs;
+    private DBHolder dbs;
     private DebugAPI debugAPI;
     private TransactionAPI transactionAPI;
     private HandshakeAPI handshakeAPI;
@@ -40,7 +43,7 @@ public class Node {
     public Node(String[] args) {
         config = new Config(args);
 
-        dbs = new DBSingletons(config.dbFolder);
+        dbs = new DBHolder(config.dbFolder);
         if(config.isInitial) {
             initialNode(config);
         }
@@ -49,10 +52,15 @@ public class Node {
         knownNodesList = new KnownNodesList(dbs.getMetaDB());
         blockchain = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config);
 
+        if(blockchain.getChain().isEmpty()) {
+            blockchain.addBlock(Block.generateGenesisBlock());
+            System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(Block.generateGenesisBlock().header.getHash()));
+        }
+
         transactionAPI = new TransactionAPI(transactionPool, knownNodesList);
         debugAPI = new DebugAPI(transactionPool);
         handshakeAPI = new HandshakeAPI(knownNodesList);
-        blockAPI = new BlockAPI(blockchain);
+        blockAPI = new BlockAPI(blockchain, config);
         utxoAPI = new UTXOAPI();
 
         if(!config.isInitial) {
@@ -89,7 +97,9 @@ public class Node {
         /*Blocks*/
         http.path("/block", () -> {
             http.get("/height", blockAPI::getCurrentBlockHeight, gson::toJson);
-            http.get("/:id", blockAPI::getBlock, gson::toJson);
+            http.get("/all", blockAPI::getAllBlockHashes, gson::toJson);
+            http.get("/retransmission/:blockhash", blockAPI::retransmittedBlock, gson::toJson);
+            http.get("/:blockhash", blockAPI::getBlock, gson::toJson);
             http.post("", blockAPI::newBlockFound, gson::toJson);
         });
 

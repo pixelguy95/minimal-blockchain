@@ -1,14 +1,10 @@
 package apis.static_structures;
 
-import db.DBSingletons;
-import domain.block.StoredBlock;
 import domain.transaction.Transaction;
-import org.apache.commons.lang.SerializationUtils;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 

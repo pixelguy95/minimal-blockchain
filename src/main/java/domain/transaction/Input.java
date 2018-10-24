@@ -1,8 +1,9 @@
 package domain.transaction;
 
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 
-public class Input {
+public class Input implements Serializable {
 
     public byte[] transactionHash;
     public int outputIndex;

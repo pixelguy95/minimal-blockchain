@@ -1,12 +1,9 @@
 package apis.static_structures;
 
 import apis.domain.Host;
-import db.DBSingletons;
 import org.apache.commons.lang.SerializationUtils;
 import org.iq80.leveldb.DB;
 
-import java.io.Serializable;
-import java.nio.ByteBuffer;
 import java.util.*;
 
 public class KnownNodesList {

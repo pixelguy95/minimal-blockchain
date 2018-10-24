@@ -7,6 +7,10 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Random;
 
+@Deprecated
+/**
+ * See domain.Block
+ */
 public class Block {
 
     private int nonce;

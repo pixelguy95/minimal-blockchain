@@ -1,6 +1,6 @@
 package apis.static_structures;
 
-import db.DBSingletons;
+import db.DBHolder;
 import domain.block.Block;
 import node.Config;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -16,11 +16,11 @@ import java.util.Arrays;
 public class BlockchainTest {
 
     private Blockchain bc;
-    private DBSingletons dbs;
+    private DBHolder dbs;
 
     @Before
     public void setUp() throws Exception {
-        dbs = new DBSingletons(".test-persist");
+        dbs = new DBHolder(".test-persist");
         Config config = new Config(new String[]{});
         config.allowOrphanBlocks = true;
         bc = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config);

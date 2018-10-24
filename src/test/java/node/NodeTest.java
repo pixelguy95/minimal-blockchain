@@ -40,7 +40,6 @@ public class NodeTest {
     @Before
     public void setUp() throws Exception {
         node1 = new Node(initialNodeArgs);
-        System.out.println();
         Thread.sleep(200);
         node2 = new Node(secondNodeArgs);
         Thread.sleep(200);

@@ -2,15 +2,11 @@ package node;
 
 import apis.domain.Host;
 import apis.domain.requests.HandshakeRequest;
-import apis.static_structures.Blockchain;
-import apis.static_structures.KnownNodesList;
-import db.DBSingletons;
 import org.apache.commons.cli.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -30,7 +26,8 @@ public class Config {
 
     public String outwardIP;
     public Host initialConnection;
-    public boolean allowOrphanBlocks = false;
+    public boolean allowOrphanBlocks = true;
+    public boolean verifyNewBlocks = true;
 
     public Config(String args[]) {
         URL url = null;

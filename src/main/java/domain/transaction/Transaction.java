@@ -134,6 +134,10 @@ public class Transaction implements Serializable {
         return DigestUtils.sha256(new Transaction(version, flag, inCounter, outCounter, inputs, Arrays.asList(outputs.get(outIndex)), witnesses, lockTime).serialize());
     }
 
+    public boolean equals(Object o) {
+        return ByteBuffer.wrap(serialize()).equals(ByteBuffer.wrap(((Transaction)o).serialize()));
+    }
+
     /**
      * TODO: Remove this when better methods exists
      * @return

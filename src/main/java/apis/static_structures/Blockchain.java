@@ -1,6 +1,5 @@
 package apis.static_structures;
 
-import db.DBSingletons;
 import domain.block.Block;
 import domain.block.StoredBlock;
 import node.Config;
@@ -9,7 +8,6 @@ import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -59,7 +57,7 @@ public class Blockchain {
         this.orphans = new HashMap<>();
     }
 
-    public synchronized void addBlock(Block block) throws Exception {
+    public synchronized void addBlock(Block block) {
         byte[] newHash = block.header.getHash();
         if (leafs.containsKey(ByteBuffer.wrap(block.header.prevBlockHash))) {
             // new block, add after one of the leaves
@@ -86,7 +84,7 @@ public class Blockchain {
             // orphan block
             orphans.put(ByteBuffer.wrap(newHash), new StoredBlock(-1, block.header));
         } else {
-            throw new Exception("No such prev block, orphans not allowed");
+            throw new RuntimeException("No such prev block, orphans not allowed");
         }
     }
 
@@ -138,7 +136,7 @@ public class Blockchain {
             return 0;
         }
 
-        return leafs.values().stream().mapToLong(l->l.height).max().getAsLong();
+        return leafs.values().stream().mapToLong(l->l.height).max().getAsLong() + 1;
     }
 
     public synchronized HashMap<ByteBuffer, StoredBlock> getChain() {
@@ -147,6 +145,10 @@ public class Blockchain {
 
     public synchronized HashMap<ByteBuffer, StoredBlock> getLeafs() {
         return leafs;
+    }
+
+    public synchronized Block getBlock(byte[] hash) {
+        return (Block) SerializationUtils.deserialize(blockDB.get(hash));
     }
 
     /**

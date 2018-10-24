@@ -9,7 +9,7 @@ import org.iq80.leveldb.Options;
 import java.io.File;
 import java.io.IOException;
 
-public class DBSingletons {
+public class DBHolder {
 
     public static final String META_FOLDER = "/meta-local";
     public static final String BLOCK_FOLDER = "/block-local";
@@ -26,7 +26,7 @@ public class DBSingletons {
     private DB transactionDB = null;
     private DB poolDB = null;
 
-    public DBSingletons(String dbFolder){
+    public DBHolder(String dbFolder){
         Options options = new Options();
         options.createIfMissing(true);
         try {

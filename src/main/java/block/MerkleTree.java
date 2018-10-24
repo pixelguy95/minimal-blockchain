@@ -5,6 +5,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
+@Deprecated
+/**
+ * See MerkeleTreeUtils
+ */
 public class MerkleTree {
 
     private MessageDigest md;

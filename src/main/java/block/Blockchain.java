@@ -5,6 +5,11 @@ import java.util.Date;
 
 import static java.lang.Math.toIntExact;
 
+@Deprecated
+/**
+ * See
+ * apis.static_structures.Blockchain
+ */
 public class Blockchain {
 
     private Block[] blocks;

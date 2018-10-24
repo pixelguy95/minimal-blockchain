@@ -1,10 +1,13 @@
 package domain.transaction;
 
+import com.sun.xml.internal.ws.developer.Serialization;
+
 import java.io.BufferedReader;
+import java.io.Serializable;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
-public class Output {
+public class Output implements Serializable {
 
     public long amount;
     public long scriptPubKeyLength;
