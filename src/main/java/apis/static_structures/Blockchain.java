@@ -2,14 +2,18 @@ package apis.static_structures;
 
 import domain.block.Block;
 import domain.block.StoredBlock;
+import domain.transaction.Output;
+import domain.utxo.UTXOIdentifier;
 import node.Config;
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.commons.lang.math.IntRange;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.stream.IntStream;
 
 public class Blockchain {
 
@@ -128,6 +132,46 @@ public class Blockchain {
 
             break;
         }
+    }
+
+    public Map<UTXOIdentifier, Output> getUTXOCandidates() {
+        Map<UTXOIdentifier, Output> newUtxos = new HashMap<>();
+
+        Block temp = getTopBlock();
+        for(int i = 0; i < config.safeBlockLength; i++) {
+            if(!chain.containsKey(ByteBuffer.wrap(temp.header.getHash()))) {
+                return newUtxos;
+            }
+
+            temp = (Block) SerializationUtils.deserialize(blockDB.get(temp.header.prevBlockHash));
+        }
+
+        IntStream.range(0, temp.transactions.size()).forEach(i -> {
+
+        });
+
+
+        //TODO: Think about this properly, wont work as output/inputs is now
+
+        return null;
+    }
+
+    public Block getTopBlock() {
+
+        if(leafs.size()==1) {
+            return (Block) SerializationUtils.deserialize(blockDB.get(leafs.values().iterator().next().blockHeader.getHash()));
+        }
+        StoredBlock heighestBlock = null;
+        int largestBlockHeight = -1;
+
+        Collection<StoredBlock> allLeafs = leafs.values();
+        for(StoredBlock block : allLeafs) {
+            if(block.height > largestBlockHeight) {
+                heighestBlock = (StoredBlock) SerializationUtils.deserialize(blockDB.get(block.blockHeader.getHash()));
+            }
+        }
+
+        return (Block) SerializationUtils.deserialize(blockDB.get(heighestBlock.blockHeader.getHash()));
     }
 
     public synchronized long getBestHeight() {

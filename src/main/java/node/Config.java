@@ -29,6 +29,8 @@ public class Config {
     public boolean allowOrphanBlocks = true;
     public boolean verifyNewBlocks = true;
 
+    public int safeBlockLength = 4;
+
     public Config(String args[]) {
         URL url = null;
         try {
