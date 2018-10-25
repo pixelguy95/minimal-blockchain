@@ -1,10 +1,13 @@
 package script;
 
+import io.nayuki.bitcoin.crypto.Ripemd160;
+import org.apache.commons.codec.digest.DigestUtils;
 import sun.font.Script;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.PublicKey;
 
 public class ScriptBuilder {
     private ByteArrayOutputStream bb;
@@ -82,5 +85,16 @@ public class ScriptBuilder {
 
     public byte[] end() {
         return bb.toByteArray();
+    }
+
+
+    public static byte[] generateP2PKScript(PublicKey pub) {
+        return ScriptBuilder.newScript()
+                .dup()
+                .hash160()
+                .writeToStack(Ripemd160.getHash(DigestUtils.sha256(pub.getEncoded())))
+                .equalVerify()
+                .checkSig()
+                .end();
     }
 }

@@ -19,7 +19,7 @@ public class UTXOIdentifier {
     }
 
     public int hashCode() {
-        return Objects.hashCode(txid, outputIndex);
+        return Objects.hashCode(ByteBuffer.wrap(txid), outputIndex);
     }
 
     public byte[] serialize() {

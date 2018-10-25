@@ -20,6 +20,7 @@ import security.ECSignatureUtils;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,8 +42,13 @@ public class NodeTest {
     private Node node3;
     private Node node4;
 
+    private PublicKey pub;
+
     @Before
     public void setUp() throws Exception {
+
+        pub = ECKeyManager.generateNewKeyPair().getPublic();
+
         node1 = new Node(initialNodeArgs);
         node1.config.verifyNewBlocks = false;
         Thread.sleep(200);
@@ -145,7 +151,7 @@ public class NodeTest {
     public void blockRetransmission() throws InterruptedException {
 
         Block genesis = Block.generateGenesisBlock();
-        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), BigInteger.TEN);
+        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), pub);
 
         BlockRESTWrapper.newBlock(new Host(node1.config.outwardIP, node1.config.port), block1);
         Thread.sleep(100); //Wait for transaction to spread to all nodes

@@ -15,9 +15,11 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import security.ECKeyManager;
 import utils.RESTUtils;
 
 import java.math.BigInteger;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -31,8 +33,12 @@ public class BlockAPITest {
 
     public Host localHost = new Host("localhost:13337");
 
+    private PublicKey pub;
+
     @Before
     public void setUp() throws Exception {
+        pub = ECKeyManager.generateNewKeyPair().getPublic();
+
         node = new Node(initialNodeArgs);
         node.config.verifyNewBlocks = false;
         Thread.sleep(100);
@@ -50,13 +56,13 @@ public class BlockAPITest {
 
         Assert.assertTrue(BlockRESTWrapper.getCurrentBlockHeight(localHost).equals(BigInteger.ONE));
 
-        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), BigInteger.TEN);
+        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), pub);
         BooleanResponse r = BlockRESTWrapper.newBlock(localHost, block1);
         Assert.assertTrue(!r.error);
 
         Assert.assertTrue(BlockRESTWrapper.getCurrentBlockHeight(localHost).equals(BigInteger.ONE.add(BigInteger.ONE)));
 
-        Block block2 = new Block(Arrays.asList(), genesis.header.getHash(), BigInteger.ONE);
+        Block block2 = new Block(Arrays.asList(), genesis.header.getHash(), pub);
         r = BlockRESTWrapper.newBlock(localHost, block2);
         Assert.assertTrue(!r.error);
 
@@ -66,7 +72,7 @@ public class BlockAPITest {
     @Test
     public void getBlock() {
         Block genesis = Block.generateGenesisBlock();
-        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), BigInteger.TEN);
+        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), pub);
         BooleanResponse r = BlockRESTWrapper.newBlock(localHost, block1);
         Assert.assertTrue(!r.error);
 
@@ -79,7 +85,7 @@ public class BlockAPITest {
     @Test
     public void getAllBlockHashes() {
         Block genesis = Block.generateGenesisBlock();
-        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), BigInteger.TEN);
+        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), pub);
         List<String> hashes = BlockRESTWrapper.getAllBlockHashes(localHost).hashes;
         Assert.assertTrue(hashes.contains(Base64.getUrlEncoder().withoutPadding().encodeToString(genesis.header.getHash())));
         Assert.assertFalse(hashes.contains(Base64.getUrlEncoder().withoutPadding().encodeToString(block1.header.getHash())));

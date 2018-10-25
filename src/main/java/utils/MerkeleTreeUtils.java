@@ -13,6 +13,10 @@ public class MerkeleTreeUtils {
             return DigestUtils.sha256("place holder");
         }
 
+        if(leaves.size() % 2 == 1){
+            leaves.add(leaves.get(leaves.size()-1));
+        }
+
         while (leaves.size() > 1){
 
             // If list is odd, duplicate last hash so it's even.
@@ -31,6 +35,6 @@ public class MerkeleTreeUtils {
     }
 
     private static byte[] doubleSHA256(byte[] first, byte[] second) {
-        return DigestUtils.sha256(DigestUtils.sha256(ByteBuffer.allocate(64).put(first).put(second).array()));
+        return DigestUtils.sha256(DigestUtils.sha256(ByteBuffer.allocate(first.length + second.length).put(first).put(second).array()));
     }
 }

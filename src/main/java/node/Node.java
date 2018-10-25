@@ -10,12 +10,14 @@ import domain.block.Block;
 import node.tasks.NetworkSetup;
 
 import java.math.BigInteger;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import security.ECKeyManager;
 import spark.Service;
 
 public class Node {
@@ -51,11 +53,7 @@ public class Node {
         transactionPool = new TransactionPool(dbs.getTransactionDB());
         knownNodesList = new KnownNodesList(dbs.getMetaDB());
         blockchain = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config);
-
-        if(blockchain.getChain().isEmpty()) {
-            blockchain.addBlock(Block.generateGenesisBlock());
-            System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(Block.generateGenesisBlock().header.getHash()));
-        }
+        System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(blockchain.getGenesisBlock().header.getHash()));
 
         transactionAPI = new TransactionAPI(transactionPool, knownNodesList);
         debugAPI = new DebugAPI(transactionPool);

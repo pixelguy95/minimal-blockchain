@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -142,13 +144,12 @@ public class Transaction implements Serializable {
      * TODO: Remove this when better methods exists
      * @return
      */
-    public static Transaction makeFakeTransaction() {
+    public static Transaction makeFakeTransaction(PrivateKey priv, PublicKey pub) {
         byte[] fakePartial = DigestUtils.sha256("This will be the partial hash".getBytes());
         byte[] fakeTransactionHash = DigestUtils.sha256("This will be the full hash".getBytes());
 
-        KeyPair kp = ECKeyManager.generateNewKeyPair();
-        byte[] signature = ECSignatureUtils.sign(fakePartial, kp.getPrivate());
-        byte[] publicKey = kp.getPublic().getEncoded();
+        byte[] signature = ECSignatureUtils.sign(fakePartial, priv);
+        byte[] publicKey = pub.getEncoded();
 
         byte[] sha = DigestUtils.sha256(publicKey);
         byte[] rip = Ripemd160.getHash(sha);

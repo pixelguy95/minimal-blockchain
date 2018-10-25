@@ -3,15 +3,21 @@ package domain.block;
 import domain.transaction.CoinbaseTransaction;
 import domain.transaction.Output;
 import domain.transaction.Transaction;
+import io.nayuki.bitcoin.crypto.Ripemd160;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.SerializationUtils;
+import script.ScriptBuilder;
+import security.ECKeyManager;
 import utils.MerkeleTreeUtils;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,14 +28,38 @@ public class Block implements Serializable {
     public List<Transaction> transactions;
     public CoinbaseTransaction coinbase;
 
-    public Block(List<Transaction> transactions, byte[] prevBlockHash, BigInteger target) {
+    public Block(List<Transaction> transactions, byte[] prevBlockHash, PublicKey pub) {
         this.transactions = transactions;
         this.transactionCounter = transactions.size();
 
-        coinbase = new CoinbaseTransaction(1, (short) 0, new Output(100, 0, new byte[]{}), null, 0xFFFFFFFF);
+        generateCoinBaseTransaction(pub);
+        byte[] merkeleTreeRoot = generateMerkeleRoot();
 
-        byte[] merkeleTreeRoot = MerkeleTreeUtils.createMerkle(transactions.stream().map(t->t.serialize()).collect(Collectors.toList()));
-        header = new BlockHeader(1, prevBlockHash, merkeleTreeRoot, target);
+        header = new BlockHeader(1, prevBlockHash, merkeleTreeRoot, BigInteger.ZERO);
+    }
+
+    /**
+     * The coinbase transaction should be to the miners address and the amount should be equal
+     * to the difference between all the inputs and all the outputs + the block reward.
+     */
+    public void generateCoinBaseTransaction(PublicKey pub) {
+
+        //TODO: calculate the amount in the output
+        long amount = 0 + 50;
+        byte[] scriptPubKey = ScriptBuilder.generateP2PKScript(pub);
+        int scriptPubKeyLength = scriptPubKey.length;
+
+        coinbase = new CoinbaseTransaction(1, (short) 0, new Output(amount, scriptPubKeyLength, scriptPubKey), null, 0xFFFFFFFF);
+    }
+
+    /**
+     * WARNING: This might be completly wrong, dont be afraid to change, make sure to run all tests after however
+     * @return
+     */
+    public byte[] generateMerkeleRoot() {
+        List<byte[]> transactionBytes = transactions.stream().map(t->t.serialize()).collect(Collectors.toList());
+        transactionBytes.add(coinbase.serialize());
+        return MerkeleTreeUtils.createMerkle(transactionBytes);
     }
 
     public boolean equals(Object o) {
@@ -43,6 +73,7 @@ public class Block implements Serializable {
     }
 
     public static Block generateGenesisBlock() {
-        return new Block(Arrays.asList(), DigestUtils.sha256("GENESIS BLOCK"), BigInteger.TEN);
+        PublicKey pub = ECKeyManager.bytesToPublicKey(Base64.getUrlDecoder().decode("MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEPb6YKZc8ZtrEHo5Z1DpyVzXWjh0lge_EmCQovRtXpyV55pPJPf9QOQAeEkp_WMtp7dwospq4AZk6mQy-YMWUtA"));
+        return new Block(Arrays.asList(), DigestUtils.sha256("GENESIS BLOCK"), pub);
     }
 }

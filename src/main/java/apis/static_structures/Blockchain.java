@@ -3,6 +3,7 @@ package apis.static_structures;
 import domain.block.Block;
 import domain.block.StoredBlock;
 import domain.transaction.Output;
+import domain.transaction.Transaction;
 import domain.utxo.UTXOIdentifier;
 import node.Config;
 import org.apache.commons.lang.SerializationUtils;
@@ -13,9 +14,13 @@ import org.iq80.leveldb.DBIterator;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Blockchain {
+
+    public static final String genesisBlockHash = "P8QgYmj9ogXgqs4MFeu2VcPn2qJERKagY_ul3NHzYhQ";
 
     private HashMap<ByteBuffer, StoredBlock> chain;
     private HashMap<ByteBuffer, StoredBlock> leafs;
@@ -59,6 +64,10 @@ public class Blockchain {
         this.chain = chain;
         this.leafs = leafs;
         this.orphans = new HashMap<>();
+
+        if(chain.size() == 0) {
+            addBlock(Block.generateGenesisBlock());
+        }
     }
 
     public synchronized void addBlock(Block block) {
@@ -137,23 +146,31 @@ public class Blockchain {
     public Map<UTXOIdentifier, Output> getUTXOCandidates() {
         Map<UTXOIdentifier, Output> newUtxos = new HashMap<>();
 
+        //Go safeBlockLength blocks down the chain
         Block temp = getTopBlock();
         for(int i = 0; i < config.safeBlockLength; i++) {
-            if(!chain.containsKey(ByteBuffer.wrap(temp.header.getHash()))) {
+            if(!chain.containsKey(ByteBuffer.wrap(temp.header.prevBlockHash))) {
                 return newUtxos;
             }
 
             temp = (Block) SerializationUtils.deserialize(blockDB.get(temp.header.prevBlockHash));
         }
 
-        IntStream.range(0, temp.transactions.size()).forEach(i -> {
+        //Add all outputs of that block into the hashmap
+        for(Transaction t : temp.transactions) {
+            AtomicInteger index = new AtomicInteger(0);
+            List<UTXOIdentifier> ids = t.outputs.stream()
+                    .map(o-> new UTXOIdentifier(t.fullHash(), index.getAndIncrement()))
+                    .collect(Collectors.toList());
 
-        });
+            for(int i = 0; i < ids.size(); i++) {
+                newUtxos.put(ids.get(i), t.outputs.get(i));
+            }
+        }
 
-
-        //TODO: Think about this properly, wont work as output/inputs is now
-
-        return null;
+        //The coinbase transaction also.
+        newUtxos.put(new UTXOIdentifier(temp.coinbase.fullHash(), 0), temp.coinbase.outputs.get(0));
+        return newUtxos;
     }
 
     public Block getTopBlock() {
@@ -193,6 +210,10 @@ public class Blockchain {
 
     public synchronized Block getBlock(byte[] hash) {
         return (Block) SerializationUtils.deserialize(blockDB.get(hash));
+    }
+
+    public synchronized Block getGenesisBlock() {
+        return (Block) SerializationUtils.deserialize(blockDB.get(Base64.getUrlDecoder().decode(genesisBlockHash)));
     }
 
     /**
