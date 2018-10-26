@@ -4,6 +4,7 @@ import apis.*;
 import apis.static_structures.Blockchain;
 import apis.static_structures.KnownNodesList;
 import apis.static_structures.TransactionPool;
+import apis.static_structures.UTXO;
 import com.google.gson.*;
 import db.DBHolder;
 import domain.block.Block;
@@ -41,6 +42,7 @@ public class Node {
     public TransactionPool transactionPool;
     public KnownNodesList knownNodesList;
     public Blockchain blockchain;
+    public UTXO utxo;
 
     public Node(String[] args) {
         config = new Config(args);
@@ -53,12 +55,13 @@ public class Node {
         transactionPool = new TransactionPool(dbs.getTransactionDB());
         knownNodesList = new KnownNodesList(dbs.getMetaDB());
         blockchain = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config);
+        utxo = new UTXO(dbs.getUtxoDB());
         System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(blockchain.getGenesisBlock().header.getHash()));
 
         transactionAPI = new TransactionAPI(transactionPool, knownNodesList);
         debugAPI = new DebugAPI(transactionPool);
         handshakeAPI = new HandshakeAPI(knownNodesList);
-        blockAPI = new BlockAPI(blockchain, knownNodesList, config);
+        blockAPI = new BlockAPI(blockchain, utxo, knownNodesList, config);
         utxoAPI = new UTXOAPI();
 
         if(!config.isInitial) {

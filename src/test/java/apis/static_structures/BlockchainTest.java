@@ -6,14 +6,12 @@ import domain.transaction.Output;
 import domain.transaction.Transaction;
 import domain.utxo.UTXOIdentifier;
 import node.Config;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import security.ECKeyManager;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.security.PublicKey;

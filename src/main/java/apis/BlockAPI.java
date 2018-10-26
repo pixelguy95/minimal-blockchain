@@ -6,6 +6,7 @@ import apis.domain.requests.NewTransactionRequest;
 import apis.domain.responses.*;
 import apis.static_structures.Blockchain;
 import apis.static_structures.KnownNodesList;
+import apis.static_structures.UTXO;
 import apis.utils.BlockRESTWrapper;
 import apis.utils.BlockVerifier;
 import apis.utils.TransactionRESTWrapper;
@@ -25,11 +26,13 @@ import java.util.stream.Collectors;
 public class BlockAPI {
 
     private Blockchain blockchain;
+    private UTXO utxo;
     private KnownNodesList knownNodesList;
     private Config config;
 
-    public BlockAPI(Blockchain blockchain, KnownNodesList knownNodesList, Config config) {
+    public BlockAPI(Blockchain blockchain, UTXO utxo, KnownNodesList knownNodesList, Config config) {
         this.blockchain = blockchain;
+        this.utxo = utxo;
         this.knownNodesList = knownNodesList;
         this.config = config;
     }
@@ -50,6 +53,7 @@ public class BlockAPI {
 
     /**
      * This is where new blocks have to be validate and added to the blockchain. If valid retransmit and add to blockchain.
+     * Ask the blockchain for new valid utxos and add them to the db.
      * @param request
      * @param response
      * @return
@@ -63,6 +67,10 @@ public class BlockAPI {
 
         blockchain.addBlock(b);
         System.out.println("ADDED " + Base64.getUrlEncoder().withoutPadding().encodeToString(b.header.getHash()));
+
+        blockchain.getUTXOCandidates().entrySet().stream().forEach(entry->{
+            utxo.put(entry.getKey(), entry.getValue());
+        });
 
         knownNodesList.getKnownNodes().stream().forEach(node -> {
             BlockRESTWrapper.retransmitBlock(node, b.header.getHash());
@@ -88,12 +96,21 @@ public class BlockAPI {
                 if(config.verifyNewBlocks) {
                     if(BlockVerifier.verifyBlock(gbr.block)) {
                         blockchain.addBlock(gbr.block);
+
+                        blockchain.getUTXOCandidates().entrySet().stream().forEach(entry->{
+                            utxo.put(entry.getKey(), entry.getValue());
+                        });
+
                         break;
                     } else {
                         return (BooleanResponse) new BooleanResponse().setError("Faulty block received");
                     }
                 } else {
                     blockchain.addBlock(gbr.block);
+                    blockchain.getUTXOCandidates().entrySet().stream().forEach(entry->{
+                        utxo.put(entry.getKey(), entry.getValue());
+                    });
+
                     break;
                 }
 

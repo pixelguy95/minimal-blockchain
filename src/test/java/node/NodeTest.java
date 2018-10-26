@@ -7,6 +7,7 @@ import domain.transaction.Input;
 import domain.transaction.Output;
 import domain.transaction.Transaction;
 import domain.block.Block;
+import domain.utxo.UTXOIdentifier;
 import io.nayuki.bitcoin.crypto.Ripemd160;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.After;
@@ -42,12 +43,12 @@ public class NodeTest {
     private Node node3;
     private Node node4;
 
-    private PublicKey pub;
+    private KeyPair pair;
 
     @Before
     public void setUp() throws Exception {
 
-        pub = ECKeyManager.generateNewKeyPair().getPublic();
+        pair = ECKeyManager.generateNewKeyPair();
 
         node1 = new Node(initialNodeArgs);
         node1.config.verifyNewBlocks = false;
@@ -151,14 +152,66 @@ public class NodeTest {
     public void blockRetransmission() throws InterruptedException {
 
         Block genesis = Block.generateGenesisBlock();
-        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), pub);
+        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), pair.getPublic());
 
         BlockRESTWrapper.newBlock(new Host(node1.config.outwardIP, node1.config.port), block1);
-        Thread.sleep(100); //Wait for transaction to spread to all nodes
+        Thread.sleep(100); //Wait for block to spread to all nodes
 
         assertTrue(node1.blockchain.getChain().containsKey(ByteBuffer.wrap(block1.header.getHash())));
         assertTrue(node2.blockchain.getChain().containsKey(ByteBuffer.wrap(block1.header.getHash())));
         assertTrue(node3.blockchain.getChain().containsKey(ByteBuffer.wrap(block1.header.getHash())));
         assertTrue(node4.blockchain.getChain().containsKey(ByteBuffer.wrap(block1.header.getHash())));
+    }
+
+
+    @Test
+    public void utxoAddedToAllNodes() throws InterruptedException {
+
+        node1.config.safeBlockLength = 4;
+        node2.config.safeBlockLength = 4;
+        node3.config.safeBlockLength = 4;
+        node4.config.safeBlockLength = 4;
+
+        Transaction t = Transaction.makeFakeTransaction(pair.getPrivate(), pair.getPublic());
+
+        Block genesis = node1.blockchain.getGenesisBlock();
+        Block block1 = new Block(Arrays.asList(t), genesis.header.getHash(), pair.getPublic());
+
+        //New
+        Block block2 = new Block(Arrays.asList(), block1.header.getHash(), ECKeyManager.generateNewKeyPair().getPublic());
+        Block block3 = new Block(Arrays.asList(), block2.header.getHash(), pair.getPublic());
+        Block block4 = new Block(Arrays.asList(), block3.header.getHash(), pair.getPublic());
+        Block block5 = new Block(Arrays.asList(), block4.header.getHash(), pair.getPublic());
+
+
+        BlockRESTWrapper.newBlock(new Host(node1.config.outwardIP, node1.config.port), block1);
+        Thread.sleep(70); //Wait for block to spread to all nodes
+        BlockRESTWrapper.newBlock(new Host(node1.config.outwardIP, node1.config.port), block2);
+        Thread.sleep(70); //Wait for block to spread to all nodes
+        BlockRESTWrapper.newBlock(new Host(node1.config.outwardIP, node1.config.port), block3);
+        Thread.sleep(70); //Wait for block to spread to all nodes
+        BlockRESTWrapper.newBlock(new Host(node1.config.outwardIP, node1.config.port), block4);
+        Thread.sleep(70); //Wait for block to spread to all nodes
+
+        assertTrue(node1.utxo.getAll().size() == 1);
+        assertTrue(node2.utxo.getAll().size() == 1);
+        assertTrue(node3.utxo.getAll().size() == 1);
+        assertTrue(node4.utxo.getAll().size() == 1);
+
+        assertTrue(node1.utxo.has(new UTXOIdentifier(genesis.coinbase.fullHash(), 0)));
+        assertFalse(node1.utxo.has(new UTXOIdentifier(block1.coinbase.fullHash(), 0)));
+
+        BlockRESTWrapper.newBlock(new Host(node1.config.outwardIP, node1.config.port), block5);
+        Thread.sleep(70); //Wait for block to spread to all nodes
+
+        assertTrue(node1.utxo.getAll().size() == 3);
+        assertTrue(node2.utxo.getAll().size() == 3);
+        assertTrue(node3.utxo.getAll().size() == 3);
+        assertTrue(node4.utxo.getAll().size() == 3);
+
+        assertTrue(node1.utxo.has(new UTXOIdentifier(genesis.coinbase.fullHash(), 0)));
+        assertTrue(node1.utxo.has(new UTXOIdentifier(block1.coinbase.fullHash(), 0)));
+        assertTrue(node1.utxo.has(new UTXOIdentifier(t.fullHash(), 0)));
+        assertFalse(node1.utxo.has(new UTXOIdentifier(block2.coinbase.fullHash(), 0)));
     }
 }

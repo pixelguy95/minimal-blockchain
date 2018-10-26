@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.Serializable;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class Output implements Serializable {
 
@@ -36,5 +37,9 @@ public class Output implements Serializable {
         bb.get(scriptPubKey, 0, (int) scriptPubKeyLength);
 
         return new Output(amount, scriptPubKeyLength, scriptPubKey);
+    }
+
+    public boolean equals(Object o) {
+        return Arrays.equals(((Output) o).serialize(), this.serialize());
     }
 }

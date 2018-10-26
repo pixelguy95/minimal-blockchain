@@ -1,8 +1,14 @@
 package domain.utxo;
 
 import com.google.common.base.Objects;
+import domain.transaction.Input;
+import domain.transaction.Output;
+import domain.transaction.Transaction;
+import domain.transaction.Witness;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UTXOIdentifier {
     public byte[] txid;
@@ -28,5 +34,18 @@ public class UTXOIdentifier {
         fill.putInt(outputIndex);
 
         return fill.array();
+    }
+
+    public static UTXOIdentifier fromBytes(byte[] bytes) {
+        if(bytes == null || bytes.length == 0) {
+            return null;
+        }
+
+        byte[] txid = new byte[32];
+        ByteBuffer bb = ByteBuffer.wrap(bytes);
+        bb.get(txid, 0, 32);
+        int outptIndex = bb.getInt();
+
+        return new UTXOIdentifier(txid, outptIndex);
     }
 }

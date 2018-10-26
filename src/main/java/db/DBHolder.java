@@ -17,6 +17,7 @@ public class DBHolder {
     public static final String LEAF_FOLDER = "/leafs-local";
     public static final String TRANSACTION_FOLDER = "/transaction-local";
     public static final String POOL_FOLDER = "/pool-local";
+    public static final String UTXO_FOLDER = "/utxo-local";
 
     private DBFactory factory;
     private DB blockDB = null;
@@ -25,6 +26,7 @@ public class DBHolder {
     private DB metaDB = null;
     private DB transactionDB = null;
     private DB poolDB = null;
+    private DB utxoDB = null;
 
     public DBHolder(String dbFolder){
         Options options = new Options();
@@ -37,6 +39,7 @@ public class DBHolder {
             metaDB = factory.open(new File(dbFolder + META_FOLDER), options);
             transactionDB = factory.open(new File(dbFolder + TRANSACTION_FOLDER), options);
             poolDB = factory.open(new File(dbFolder + POOL_FOLDER), options);
+            utxoDB = factory.open(new File(dbFolder + UTXO_FOLDER), options);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
@@ -57,6 +60,7 @@ public class DBHolder {
             metaDB.close();
             transactionDB.close();
             poolDB.close();
+            utxoDB.close();
 
             factory.destroy(new File(dbFolder+BLOCK_FOLDER), options);
             factory.destroy(new File(dbFolder+BLOCKHEADER_FOLDER), options);
@@ -64,6 +68,7 @@ public class DBHolder {
             factory.destroy(new File(dbFolder+POOL_FOLDER), options);
             factory.destroy(new File(dbFolder+META_FOLDER), options);
             factory.destroy(new File(dbFolder+TRANSACTION_FOLDER), options);
+            factory.destroy(new File(dbFolder+UTXO_FOLDER), options);
 
             //init(dbFolder);
         } catch (IOException e) {
@@ -99,6 +104,10 @@ public class DBHolder {
         return poolDB;
     }
 
+    public DB getUtxoDB() {
+        return utxoDB;
+    }
+
     public void restart(String dbFolder) {
         Options options = new Options();
         options.createIfMissing(true);
@@ -110,6 +119,7 @@ public class DBHolder {
             metaDB = factory.open(new File(dbFolder + META_FOLDER), options);
             transactionDB = factory.open(new File(dbFolder + TRANSACTION_FOLDER), options);
             poolDB = factory.open(new File(dbFolder + POOL_FOLDER), options);
+            utxoDB = factory.open(new File(dbFolder + UTXO_FOLDER), options);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
