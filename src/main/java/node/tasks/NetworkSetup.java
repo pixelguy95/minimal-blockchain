@@ -44,7 +44,7 @@ public class NetworkSetup extends AbstractTask {
         }
 
         LinkedList<Host> nodeQueue = new LinkedList<>();
-        nodeQueue.add(knownNodesList.getKnownNodes().iterator().next());
+        nodeQueue.addAll(knownNodesList.getKnownNodes());
 
         Host me = new Host(config.outwardIP, config.port);
 
@@ -52,8 +52,8 @@ public class NetworkSetup extends AbstractTask {
             Host next = nodeQueue.poll();
 
             if(me.equals(next) || !RESTUtils.exists(next)) {
-                System.err.println("FAULTY NODE GIVEN, IGNORED");
-                break;
+                System.err.println("FAULTY NODE GIVEN, IGNORED " + next.ip + ":" + next.port + " " + me.ip + ":" + me.port);
+                continue;
             }
 
             RESTUtils.post(next, "addr", AddrResponse.class, new AddrRequest(config.outwardIP, config.port));

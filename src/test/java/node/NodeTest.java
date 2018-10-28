@@ -18,6 +18,7 @@ import script.ScriptBuilder;
 import security.ECKeyManager;
 import security.ECSignatureUtils;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
@@ -37,6 +38,8 @@ public class NodeTest {
     private static final String[] secondNodeArgs = new String[]{"-n", "localhost:13337", "-p", "13338", "-db", ".local-persistence-test2"};
     private static final String[] thirdNodeArgs = new String[]{"-n", "localhost:13338", "-p", "13339", "-db", ".local-persistence-test3"};
     private static final String[] fourthNodeArgs = new String[]{"-n", "localhost:13338", "-p", "13340", "-db", ".local-persistence-test4"};
+    private static final String[] lonelyNode = new String[]{"-n", "localhost:13338", "-p", "13341", "-db", ".local-persistence-test5"};
+
 
     private Node node1;
     private Node node2;
@@ -213,5 +216,96 @@ public class NodeTest {
         assertTrue(node1.utxo.has(new UTXOIdentifier(block1.coinbase.fullHash(), 0)));
         assertTrue(node1.utxo.has(new UTXOIdentifier(t.fullHash(), 0)));
         assertFalse(node1.utxo.has(new UTXOIdentifier(block2.coinbase.fullHash(), 0)));
+    }
+
+    @Test
+    public void testLonelyNodeNotInitial() throws InterruptedException, IOException {
+        node1.kill();
+        node2.kill();
+        node3.kill();
+        node4.kill();
+        node1.destroyPersistantData();
+        node2.destroyPersistantData();
+        node3.destroyPersistantData();
+        node4.destroyPersistantData();
+
+        Node lNode = new Node(lonelyNode);
+        Thread.sleep(2000);
+        assertFalse(lNode.isRunning.get());
+
+        lNode.destroyPersistantData();
+    }
+
+    /**
+     * At time of writing the largest and most time consuming test of all.
+     *
+     * Starts by adding a block to make sure that it propagates as it should.
+     * Then kills node 2 and 3
+     * Adds another block to the network. THe remaining nodes should be able to handle the change in network structure
+     * Makes sure tht the remaining node only knows of each other.
+     * Adds another block to make the following tasks a bit less trivial.
+     * Starts up the killed nodes again
+     * Checks that all the nodes know of each pother (the network is complete again)
+     * Checks that all the blocks added while 2 and 3 were gone is synced across the network.
+     * Adds another block just to make sure that everything is alright.
+     *
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    @Test
+    public void testDisconnectingNodes() throws InterruptedException, IOException {
+        Block genesis = node1.blockchain.getGenesisBlock();
+        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), pair.getPublic());
+        Block block2 = new Block(Arrays.asList(), block1.header.getHash(), pair.getPublic());
+        Block block3 = new Block(Arrays.asList(), block2.header.getHash(), pair.getPublic());
+        Block block4 = new Block(Arrays.asList(), block3.header.getHash(), pair.getPublic());
+
+        BlockRESTWrapper.newBlock(new Host(node1.config.outwardIP, node1.config.port), block1);
+        Thread.sleep(70); //Wait for block to spread to all nodes
+
+        assertTrue(node1.blockchain.getChain().size() == 2);
+        assertTrue(node2.blockchain.getChain().size() == 2);
+        assertTrue(node3.blockchain.getChain().size() == 2);
+        assertTrue(node4.blockchain.getChain().size() == 2);
+
+        node2.kill();
+        node3.kill();
+
+        BlockRESTWrapper.newBlock(new Host(node1.config.outwardIP, node1.config.port), block2);
+        Thread.sleep(70); //Wait for block to spread to all nodes
+
+        assertTrue(node1.knownNodesList.getKnownNodes().size() == 1);
+        assertTrue(node4.knownNodesList.getKnownNodes().size() == 1);
+
+        BlockRESTWrapper.newBlock(new Host(node1.config.outwardIP, node1.config.port), block3);
+        Thread.sleep(70); //Wait for block to spread to all nodes
+
+        node2 = new Node(secondNodeArgs);
+        Thread.sleep(300);
+        node3 = new Node(thirdNodeArgs);
+        Thread.sleep(300);
+
+        assertTrue(node1.knownNodesList.getKnownNodes().size() == 3);
+        assertTrue(node2.knownNodesList.getKnownNodes().size() == 3);
+        assertTrue(node3.knownNodesList.getKnownNodes().size() == 3);
+        assertTrue(node4.knownNodesList.getKnownNodes().size() == 3);
+
+        assertTrue(node1.blockchain.getChain().size() == 4);
+        assertTrue(node2.blockchain.getChain().size() == 4);
+        assertTrue(node3.blockchain.getChain().size() == 4);
+        assertTrue(node4.blockchain.getChain().size() == 4);
+
+        BlockRESTWrapper.newBlock(new Host(node2.config.outwardIP, node1.config.port), block4);
+        Thread.sleep(70); //Wait for block to spread to all nodes
+
+        assertTrue(node1.blockchain.getChain().size() == 5);
+        assertTrue(node2.blockchain.getChain().size() == 5);
+        assertTrue(node3.blockchain.getChain().size() == 5);
+        assertTrue(node4.blockchain.getChain().size() == 5);
+
+        assertTrue(node1.blockchain.getLeafs().size() == 1);
+        assertTrue(node2.blockchain.getLeafs().size() == 1);
+        assertTrue(node3.blockchain.getLeafs().size() == 1);
+        assertTrue(node4.blockchain.getLeafs().size() == 1);
     }
 }

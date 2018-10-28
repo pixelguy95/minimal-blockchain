@@ -30,7 +30,7 @@ public class KnownNodesList {
         }
     }
 
-    public HashSet<Host> getKnownNodes() {
+    public synchronized HashSet<Host> getKnownNodes() {
         return knownNodesList;
     }
 

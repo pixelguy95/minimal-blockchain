@@ -11,16 +11,18 @@ import org.apache.commons.lang.math.IntRange;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Blockchain {
 
-    public static final String genesisBlockHash = "P8QgYmj9ogXgqs4MFeu2VcPn2qJERKagY_ul3NHzYhQ";
+    public static final String genesisBlockHash = "BZeoTngFEB0OjdlbMUhK-tsChbIL9aHhvXohh2mpwhs";
 
     private HashMap<ByteBuffer, StoredBlock> chain;
     private HashMap<ByteBuffer, StoredBlock> leafs;
@@ -51,7 +53,7 @@ public class Blockchain {
 
             byte[] leafBytes = metaDB.get("leafkey".getBytes());
             if (leafBytes != null && leafBytes.length != 0) {
-                leafs = (HashMap<ByteBuffer, StoredBlock>) SerializationUtils.deserialize(metaDB.get("leafkey".getBytes()));
+                leafs = deserilizeLeafs(leafBytes);
             } else {
                 leafs = new HashMap<>();
             }
@@ -99,6 +101,8 @@ public class Blockchain {
         } else {
             throw new RuntimeException("No such prev block, orphans not allowed");
         }
+
+        persistLocalVariables();
     }
 
     private void checkOrphans() {
@@ -216,11 +220,15 @@ public class Blockchain {
         return (Block) SerializationUtils.deserialize(blockDB.get(Base64.getUrlDecoder().decode(genesisBlockHash)));
     }
 
-    /**
-     * This might be really stupid and useless, will probably be removed
-     */
+    private HashMap<ByteBuffer, StoredBlock> deserilizeLeafs(byte[] leafBytes) {
+        List<StoredBlock> asList = (ArrayList<StoredBlock>) SerializationUtils.deserialize(leafBytes);
+        HashMap<ByteBuffer, StoredBlock> ret = new HashMap<>();
+        asList.stream().forEach(b->ret.put(ByteBuffer.wrap(b.hashOfThisBlock()), b));
+        return ret;
+    }
+
     public synchronized void persistLocalVariables() {
-        metaDB.put("leafkey".getBytes(), SerializationUtils.serialize(leafs));
+        metaDB.put("leafkey".getBytes(), SerializationUtils.serialize(new ArrayList<>(leafs.values())));
         chain.entrySet().stream().forEach(entry -> {
             blockHeaderDB.put(entry.getKey().array(), SerializationUtils.serialize(entry.getValue()));
         });

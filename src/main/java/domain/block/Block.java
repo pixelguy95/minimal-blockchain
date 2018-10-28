@@ -73,7 +73,7 @@ public class Block implements Serializable {
     }
 
     public static Block generateGenesisBlock() {
-        PublicKey pub = ECKeyManager.bytesToPublicKey(Base64.getUrlDecoder().decode("MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEPb6YKZc8ZtrEHo5Z1DpyVzXWjh0lge_EmCQovRtXpyV55pPJPf9QOQAeEkp_WMtp7dwospq4AZk6mQy-YMWUtA"));
+        PublicKey pub = ECKeyManager.bytesToPublicKey(Base64.getUrlDecoder().decode("MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAECibpSuVLXUv-dNRPpDJ7H416s8g0e3uqGMkTL23OOMewtkeOPH8GgByAu7-acla3bmORGH5GadbUEjBk9YE79A"));
         return new Block(Arrays.asList(), DigestUtils.sha256("GENESIS BLOCK"), pub);
     }
 }

@@ -9,4 +9,8 @@ public class StoredBlock implements Serializable {
         this.height = height;
         this.blockHeader = blockHeader;
     }
+
+    public byte[] hashOfThisBlock() {
+        return blockHeader.getHash();
+    }
 }

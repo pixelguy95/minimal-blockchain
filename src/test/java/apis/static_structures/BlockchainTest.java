@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 import security.ECKeyManager;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -23,11 +24,12 @@ public class BlockchainTest {
     private Blockchain bc;
     private DBHolder dbs;
     private PublicKey pub;
+    private Config config;
 
     @Before
     public void setUp() throws Exception {
         dbs = new DBHolder(".test-persist");
-        Config config = new Config(new String[]{});
+        config = new Config(new String[]{});
         config.allowOrphanBlocks = true;
         bc = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config);
         bc.addBlock(Block.generateGenesisBlock());
@@ -127,11 +129,27 @@ public class BlockchainTest {
         Assert.assertTrue(utxo.containsKey(new UTXOIdentifier(t.fullHash(), 0)));
     }
 
+    @Test
+    public void testRecreation() throws IOException {
+        Block genesis = bc.getGenesisBlock();
+        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), pub);
+        Block block2 = new Block(Arrays.asList(), block1.header.getHash(), pub);
+
+        bc.addBlock(block1);
+        bc.addBlock(block2);
+
+        Assert.assertTrue(bc.getChain().size()==3);
+
+        dbs.closeAll();
+        dbs = new DBHolder(".test-persist");
+        bc = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config);
+
+        Assert.assertTrue(bc.getChain().size()==3);
+        Assert.assertEquals(bc.getBlock(genesis.header.getHash()), genesis);
+    }
+
     @After
     public void tearDown() throws Exception {
         dbs.destroy(".test-persist");
     }
-
-
-
 }

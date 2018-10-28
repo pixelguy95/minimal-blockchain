@@ -54,13 +54,8 @@ public class DBHolder {
     public void destroy(String dbFolder) {
         Options options = new Options();
         try {
-            blockDB.close();
-            leafDB.close();
-            blockHeaderDB.close();
-            metaDB.close();
-            transactionDB.close();
-            poolDB.close();
-            utxoDB.close();
+
+            closeAll();
 
             factory.destroy(new File(dbFolder+BLOCK_FOLDER), options);
             factory.destroy(new File(dbFolder+BLOCKHEADER_FOLDER), options);
@@ -74,6 +69,16 @@ public class DBHolder {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void closeAll() throws IOException {
+        blockDB.close();
+        leafDB.close();
+        blockHeaderDB.close();
+        metaDB.close();
+        transactionDB.close();
+        poolDB.close();
+        utxoDB.close();
     }
 
     public DBFactory getFactory() {

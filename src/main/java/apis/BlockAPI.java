@@ -14,11 +14,13 @@ import domain.block.Block;
 import domain.transaction.Transaction;
 import node.Config;
 import node.SpecialJSONSerializer;
+import org.restlet.resource.ResourceException;
 import spark.Request;
 import spark.Response;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -65,17 +67,9 @@ public class BlockAPI {
             return (BooleanResponse) new BooleanResponse().setError("Block didn't pass verification");
         }
 
-        blockchain.addBlock(b);
-        System.out.println("ADDED " + Base64.getUrlEncoder().withoutPadding().encodeToString(b.header.getHash()));
+        addNewBlockAndManageUTXO(b);
 
-        blockchain.getUTXOCandidates().entrySet().stream().forEach(entry->{
-            utxo.put(entry.getKey(), entry.getValue());
-        });
-
-        knownNodesList.getKnownNodes().stream().forEach(node -> {
-            BlockRESTWrapper.retransmitBlock(node, b.header.getHash());
-        });
-
+        retransmitBlockHashToAll(b.header.getHash());
         return new BooleanResponse();
     }
 
@@ -92,35 +86,21 @@ public class BlockAPI {
             GetBlockResponse gbr = BlockRESTWrapper.getBlock(h, blockhash);
 
             if (!gbr.error) {
-
                 if(config.verifyNewBlocks) {
                     if(BlockVerifier.verifyBlock(gbr.block)) {
-                        blockchain.addBlock(gbr.block);
-
-                        blockchain.getUTXOCandidates().entrySet().stream().forEach(entry->{
-                            utxo.put(entry.getKey(), entry.getValue());
-                        });
-
+                        addNewBlockAndManageUTXO(gbr.block);
                         break;
                     } else {
                         return (BooleanResponse) new BooleanResponse().setError("Faulty block received");
                     }
                 } else {
-                    blockchain.addBlock(gbr.block);
-                    blockchain.getUTXOCandidates().entrySet().stream().forEach(entry->{
-                        utxo.put(entry.getKey(), entry.getValue());
-                    });
-
+                    addNewBlockAndManageUTXO(gbr.block);
                     break;
                 }
-
             }
         }
 
-        knownNodesList.getKnownNodes().stream().forEach(node -> {
-            BlockRESTWrapper.retransmitBlock(node, blockhash);
-        });
-
+        retransmitBlockHashToAll(blockhash);
         return new BooleanResponse();
     }
 
@@ -132,5 +112,25 @@ public class BlockAPI {
                 .collect(Collectors.toList());
 
         return new GetAllBlockHashesResponse(hashes);
+    }
+
+    private void addNewBlockAndManageUTXO(Block block) {
+        blockchain.addBlock(block);
+        blockchain.getUTXOCandidates().entrySet().stream().forEach(entry->{
+            utxo.put(entry.getKey(), entry.getValue());
+        });
+    }
+
+    private void retransmitBlockHashToAll(byte[] hash) {
+        List<Host> notResponding = new ArrayList<>();
+        knownNodesList.getKnownNodes().stream().forEach(host -> {
+            try {
+                BlockRESTWrapper.retransmitBlock(host, hash);
+            } catch (ResourceException e) {
+                notResponding.add(host);
+            }
+        });
+
+        notResponding.forEach(h->knownNodesList.removeNode(h));
     }
 }

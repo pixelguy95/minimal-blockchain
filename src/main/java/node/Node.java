@@ -8,8 +8,10 @@ import apis.static_structures.UTXO;
 import com.google.gson.*;
 import db.DBHolder;
 import domain.block.Block;
+import node.tasks.BlockSync;
 import node.tasks.NetworkSetup;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.PublicKey;
 import java.util.Arrays;
@@ -20,6 +22,7 @@ import java.util.logging.Level;
 import org.apache.commons.codec.digest.DigestUtils;
 import security.ECKeyManager;
 import spark.Service;
+import utils.RESTUtils;
 
 public class Node {
 
@@ -30,6 +33,7 @@ public class Node {
 
     private Service http;
 
+    public AtomicBoolean isRunning;
     public Config config;
 
     private DBHolder dbs;
@@ -45,6 +49,7 @@ public class Node {
     public UTXO utxo;
 
     public Node(String[] args) {
+        isRunning = new AtomicBoolean(true);
         config = new Config(args);
 
         dbs = new DBHolder(config.dbFolder);
@@ -56,7 +61,6 @@ public class Node {
         knownNodesList = new KnownNodesList(dbs.getMetaDB());
         blockchain = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config);
         utxo = new UTXO(dbs.getUtxoDB());
-        System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(blockchain.getGenesisBlock().header.getHash()));
 
         transactionAPI = new TransactionAPI(transactionPool, knownNodesList);
         debugAPI = new DebugAPI(transactionPool);
@@ -65,8 +69,16 @@ public class Node {
         utxoAPI = new UTXOAPI();
 
         if(!config.isInitial) {
+
+            if(!RESTUtils.exists(config.initialConnection)) {
+                System.err.println("INITIAL NODE WAS NOT FOUND " + config.initialConnection.ip + ":" + config.initialConnection.port);
+                isRunning.set(false);
+                return;
+            }
+
             knownNodesList.addNode(config.initialConnection);
             new NetworkSetup(new AtomicBoolean(true), config, knownNodesList, blockchain).run();
+            new BlockSync(new AtomicBoolean(true), knownNodesList, blockchain).run();
         }
 
         setUpEndPoints(config);
@@ -123,8 +135,9 @@ public class Node {
         });
     }
 
-    public void kill() {
+    public void kill() throws IOException {
         http.stop();
+        dbs.closeAll();
     }
 
     public void destroyPersistantData() {
