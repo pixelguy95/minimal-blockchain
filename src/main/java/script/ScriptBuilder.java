@@ -2,7 +2,6 @@ package script;
 
 import io.nayuki.bitcoin.crypto.Ripemd160;
 import org.apache.commons.codec.digest.DigestUtils;
-import sun.font.Script;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

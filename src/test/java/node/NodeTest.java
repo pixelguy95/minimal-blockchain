@@ -268,7 +268,9 @@ public class NodeTest {
         assertTrue(node3.blockchain.getChain().size() == 2);
         assertTrue(node4.blockchain.getChain().size() == 2);
 
+        System.out.println("Killing node 2");
         node2.kill();
+        System.out.println("Killing node 3");
         node3.kill();
 
         BlockRESTWrapper.newBlock(new Host(node1.config.outwardIP, node1.config.port), block2);

@@ -123,10 +123,12 @@ public class BlockAPI {
 
     private void retransmitBlockHashToAll(byte[] hash) {
         List<Host> notResponding = new ArrayList<>();
-        knownNodesList.getKnownNodes().stream().forEach(host -> {
+
+        new ArrayList<>(knownNodesList.getKnownNodes()).stream().forEach(host -> {
             try {
+                System.out.println(host.ip + " " + host.port);
                 BlockRESTWrapper.retransmitBlock(host, hash);
-            } catch (ResourceException e) {
+            } catch (Exception e) {
                 notResponding.add(host);
             }
         });

@@ -7,14 +7,16 @@ import apis.domain.responses.NewTransactionResponse;
 import apis.domain.responses.TransactionRetransmissionResponse;
 import apis.static_structures.KnownNodesList;
 import apis.static_structures.TransactionPool;
+import apis.utils.BlockRESTWrapper;
 import apis.utils.TransactionRESTWrapper;
 import apis.utils.TransactionVerifier;
-import com.google.gson.Gson;
 import domain.transaction.Transaction;
 import node.SpecialJSONSerializer;
+import org.restlet.resource.ResourceException;
 import spark.Request;
 import spark.Response;
 
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
@@ -36,10 +38,7 @@ public class TransactionAPI {
         }
 
         transactionPool.put(t);
-
-        knownNodesList.getKnownNodes().stream().forEach(node -> {
-            TransactionRESTWrapper.retransmitTransaction(node, t.fullHash());
-        });
+        retransmitTransaction(t.fullHash());
 
         return new NewTransactionResponse();
     }
@@ -73,10 +72,21 @@ public class TransactionAPI {
             }
         }
 
-        knownNodesList.getKnownNodes().stream().forEach(node -> {
-            TransactionRESTWrapper.retransmitTransaction(node, txid);
-        });
+        retransmitTransaction(txid);
 
         return new TransactionRetransmissionResponse();
+    }
+
+    private void retransmitTransaction(byte[] hash) {
+        List<Host> notResponding = new ArrayList<>();
+        knownNodesList.getKnownNodes().stream().forEach(host -> {
+            try {
+                TransactionRESTWrapper.retransmitTransaction(host, hash);
+            } catch (ResourceException e) {
+                notResponding.add(host);
+            }
+        });
+
+        notResponding.forEach(h->knownNodesList.removeNode(h));
     }
 }

@@ -4,6 +4,7 @@ import apis.domain.Host;
 import apis.domain.requests.AddrRequest;
 import apis.domain.requests.HandshakeRequest;
 import apis.domain.responses.AddrResponse;
+import apis.domain.responses.BooleanResponse;
 import apis.domain.responses.GetAddrResponse;
 import apis.domain.responses.HandshakeResponse;
 import apis.static_structures.KnownNodesList;
@@ -43,9 +44,9 @@ public class HandshakeAPI {
      * @param response
      * @return
      */
-    public String leave(Request request, Response response) {
-        //KnownNodesList.removeNode();
-        return "Good bye";
+    public BooleanResponse leave(Request request, Response response) {
+        knownNodesList.removeNode(new Host(request.ip(), Integer.valueOf(request.params("port"))));
+        return new BooleanResponse();
     }
 
     public AddrResponse addr(Request request, Response response) {

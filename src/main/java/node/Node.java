@@ -1,10 +1,12 @@
 package node;
 
 import apis.*;
+import apis.domain.responses.GetAllBlockHashesResponse;
 import apis.static_structures.Blockchain;
 import apis.static_structures.KnownNodesList;
 import apis.static_structures.TransactionPool;
 import apis.static_structures.UTXO;
+import apis.utils.BlockRESTWrapper;
 import com.google.gson.*;
 import db.DBHolder;
 import domain.block.Block;
@@ -20,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.restlet.resource.ResourceException;
 import security.ECKeyManager;
 import spark.Service;
 import utils.RESTUtils;
@@ -136,6 +139,14 @@ public class Node {
     }
 
     public void kill() throws IOException {
+
+        knownNodesList.getKnownNodes().stream().forEach(host -> {
+            try {
+                RESTUtils.get(host, "addr/leave", GetAllBlockHashesResponse.class, Arrays.asList(String.valueOf(config.port)));
+            } catch (ResourceException e) {
+            }
+        });
+
         http.stop();
         dbs.closeAll();
     }

@@ -6,7 +6,10 @@ import apis.domain.responses.Response;
 import apis.static_structures.KnownNodesList;
 import com.google.gson.Gson;
 import node.SpecialJSONSerializer;
+import org.restlet.Client;
+import org.restlet.Context;
 import org.restlet.data.MediaType;
+import org.restlet.data.Protocol;
 import org.restlet.resource.ClientResource;
 
 import java.io.IOException;
@@ -22,7 +25,10 @@ public class RESTUtils {
 
         System.out.println(url + "/" + endpoint + args.stream().map(e->"/".concat(e)).collect(Collectors.joining()));
         try {
+            Client client = new Client(new Context(), Protocol.HTTP);
+            client.getContext().getParameters().add ( "socketTimeout", "3000" );
             ClientResource c = new ClientResource(url + "/" + endpoint + args.stream().map(e->"/".concat(e)).collect(Collectors.joining()));
+            c.setNext(client);
             c.getLogger().setLevel(Level.OFF);
             Writer writer = new StringWriter();
             c.get().write(writer);
@@ -39,7 +45,11 @@ public class RESTUtils {
 
         System.out.println(host.asURL() + "/" + endpoint + args.stream().map(e->"/".concat(e)).collect(Collectors.joining()));
         try {
+            Client client = new Client(new Context(), Protocol.HTTP);
+            client.getContext().getParameters().add ( "socketTimeout", "3000" );
+
             ClientResource c = new ClientResource(host.asURL() + "/" + endpoint + args.stream().map(e->"/".concat(e)).collect(Collectors.joining()));
+            c.setNext(client);
             c.getLogger().setLevel(Level.OFF);
             Writer writer = new StringWriter();
             c.get().write(writer);
@@ -56,7 +66,10 @@ public class RESTUtils {
 
         System.out.println(host.asURL() + "/" + endpoint);
         try {
+            Client client = new Client(new Context(), Protocol.HTTP);
+            client.getContext().getParameters().add ( "socketTimeout", "3000" );
             ClientResource c = new ClientResource(host.asURL() + "/" + endpoint);
+            c.setNext(client);
             c.getLogger().setLevel(Level.OFF);
             Writer writer = new StringWriter();
             c.get().write(writer);
@@ -104,7 +117,11 @@ public class RESTUtils {
     public static <T extends Response, R extends Request> T post(Host host, String endpoint, Class<T> returnType, R body) {
         System.out.println(host.asURL() + "/" + endpoint);
         try {
+            Client client = new Client(new Context(), Protocol.HTTP);
+            client.getContext().getParameters().add ( "socketTimeout", "3000" );
+
             ClientResource c = new ClientResource(host.asURL() + "/" + endpoint);
+            c.setNext(client);
             c.getLogger().setLevel(Level.OFF);
             Writer writer = new StringWriter();
             c.post(SpecialJSONSerializer.getInstance().toJson(body), MediaType.TEXT_ALL).write(writer);
@@ -119,7 +136,11 @@ public class RESTUtils {
 
     public static boolean exists(Host host) {
         try {
+            Client client = new Client(new Context(), Protocol.HTTP);
+            client.getContext().getParameters().add ( "socketTimeout", "3000" );
+
             ClientResource c = new ClientResource(host.asURL()+"/version");
+            c.setNext(client);
             c.getLogger().setLevel(Level.OFF);
             Writer writer = new StringWriter();
             c.get().write(writer);
