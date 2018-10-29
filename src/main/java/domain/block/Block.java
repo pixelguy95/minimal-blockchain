@@ -35,7 +35,7 @@ public class Block implements Serializable {
         generateCoinBaseTransaction(pub);
         byte[] merkeleTreeRoot = generateMerkeleRoot();
 
-        header = new BlockHeader(1, prevBlockHash, merkeleTreeRoot, BigInteger.ZERO);
+        header = new BlockHeader(1, prevBlockHash, merkeleTreeRoot, new byte[4]);
     }
 
     /**

@@ -1,5 +1,6 @@
 package utils;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -9,14 +10,17 @@ public class DifficultyAdjustment {
         // No invocation possible
     }
 
-    public static byte[] calculateTarget(byte[] difficulty){
+    public static BigInteger calculateTarget(byte[] difficulty){
 
         int exponent = difficulty[0];
+        difficulty[0] = 0;
+        System.out.println(exponent);
+        ByteBuffer wrapped = ByteBuffer.wrap(Arrays.copyOfRange(difficulty, 0, 4));
+        BigInteger coefficient = BigInteger.valueOf(wrapped.getInt());
+        System.out.println(coefficient);
+        BigInteger base = BigInteger.valueOf(2);
 
-        ByteBuffer wrapped = ByteBuffer.wrap(Arrays.copyOfRange(difficulty, 1, 4));
-        int coefficient = wrapped.getInt();
-
-        return DifficultyAdjustment.toByteArray(coefficient * (long)Math.pow(2, (8 * (exponent - 1))));
+        return coefficient.multiply(base.pow((8 * (exponent - 3))));
     }
 
     private static byte[] toByteArray(long value) {
