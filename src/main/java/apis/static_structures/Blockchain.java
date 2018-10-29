@@ -11,6 +11,7 @@ import org.apache.commons.lang.math.IntRange;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 
+import java.awt.image.ByteLookupTable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -147,17 +148,27 @@ public class Blockchain {
         }
     }
 
-    public Map<UTXOIdentifier, Output> getUTXOCandidates() {
-        Map<UTXOIdentifier, Output> newUtxos = new HashMap<>();
-
+    public Block walkSafeBLockLength() {
         //Go safeBlockLength blocks down the chain
         Block temp = getTopBlock();
         for(int i = 0; i < config.safeBlockLength; i++) {
             if(!chain.containsKey(ByteBuffer.wrap(temp.header.prevBlockHash))) {
-                return newUtxos;
+                return null;
             }
 
             temp = (Block) SerializationUtils.deserialize(blockDB.get(temp.header.prevBlockHash));
+        }
+
+        return temp;
+    }
+
+    public Map<UTXOIdentifier, Output> getUTXOCandidates() {
+        Map<UTXOIdentifier, Output> newUtxos = new HashMap<>();
+
+        Block temp = walkSafeBLockLength();
+
+        if(temp == null) {
+            return newUtxos;
         }
 
         //Add all outputs of that block into the hashmap
@@ -177,6 +188,74 @@ public class Blockchain {
         return newUtxos;
     }
 
+    public Map<UTXOIdentifier, Output> getUTXORemovalCandidates() {
+        Map<UTXOIdentifier, Output> oldUTXOS = new HashMap<>();
+
+        Block temp = walkSafeBLockLength();
+
+        if(temp == null) {
+            return oldUTXOS;
+        }
+
+        //Add all reference outputs from the inputs into the hashmap
+        for(Transaction t : temp.transactions) {
+            AtomicInteger index = new AtomicInteger(0);
+            List<UTXOIdentifier> ids = t.inputs.stream()
+                    .map(input-> new UTXOIdentifier(input.transactionHash, input.outputIndex))
+                    .collect(Collectors.toList());
+
+            for(int i = 0; i < ids.size(); i++) {
+                oldUTXOS.put(ids.get(i), t.outputs.get(i));
+            }
+        }
+
+        return oldUTXOS;
+    }
+
+    /**
+     * Removes all leafs that are safeBlockDistance away from the top block height
+     * Only removed from the leaf list. Not from the blockdata (ATM)
+     * @return list of all blocks removed
+     */
+    public List<StoredBlock> prune() {
+        List<StoredBlock> removals = new ArrayList<>();
+
+        leafs.values().stream().forEach(leaf->{
+            if(leaf.height + config.safeBlockLength < getBestHeight()) {
+                removals.add(leaf);
+            }
+        });
+
+        removals.stream().forEach(r->leafs.remove(ByteBuffer.wrap(r.blockHeader.getHash())));
+
+        return removals;
+    }
+
+    public Transaction getTransactionByTXID(byte[] txid) {
+        Block b = getTopBlock();
+        while(b != null) {
+
+            for(Transaction t : b.transactions) {
+                if(ByteBuffer.wrap(t.serialize()).equals(ByteBuffer.wrap(txid))) {
+                    return t;
+                }
+            }
+
+            if(ByteBuffer.wrap(b.coinbase.fullHash()).equals(ByteBuffer.wrap(txid))) {
+                return b.coinbase;
+            }
+
+            if(!chain.containsKey(ByteBuffer.wrap(b.header.prevBlockHash))) {
+                b = null;
+                continue;
+            }
+
+            b = (Block) SerializationUtils.deserialize(blockDB.get(b.header.prevBlockHash));
+        }
+
+        return null;
+    }
+
     public Block getTopBlock() {
 
         if(leafs.size()==1) {
@@ -188,7 +267,7 @@ public class Blockchain {
         Collection<StoredBlock> allLeafs = leafs.values();
         for(StoredBlock block : allLeafs) {
             if(block.height > largestBlockHeight) {
-                heighestBlock = (StoredBlock) SerializationUtils.deserialize(blockDB.get(block.blockHeader.getHash()));
+                heighestBlock = chain.get(ByteBuffer.wrap(block.blockHeader.getHash()));
             }
         }
 

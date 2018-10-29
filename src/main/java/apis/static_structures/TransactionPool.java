@@ -28,6 +28,10 @@ public class TransactionPool {
         transactionPoolDB.put(t.fullHash(), t.serialize());
     }
 
+    public synchronized void remove(byte[] txid) {
+        transactionPoolDB.delete(txid);
+    }
+
     public synchronized boolean has(byte[] key) {
         return transactionPoolDB.get(key) != null;
     }

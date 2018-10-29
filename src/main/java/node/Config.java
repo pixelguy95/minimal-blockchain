@@ -28,6 +28,7 @@ public class Config {
     public Host initialConnection;
     public boolean allowOrphanBlocks = true;
     public boolean verifyNewBlocks = true;
+    public boolean verifyTransactions = true;
 
     public int safeBlockLength = 4;
 

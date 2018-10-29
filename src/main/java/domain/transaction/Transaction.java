@@ -1,5 +1,7 @@
 package domain.transaction;
 
+import apis.static_structures.Blockchain;
+import domain.utxo.UTXOIdentifier;
 import io.nayuki.bitcoin.crypto.Base58Check;
 import io.nayuki.bitcoin.crypto.Ripemd160;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -14,9 +16,8 @@ import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * https://en.bitcoin.it/wiki/Transaction
@@ -166,5 +167,71 @@ public class Transaction implements Serializable {
         List<Output> outputs = Arrays.asList(output);
 
         return new Transaction(1, (short) 0, 1, 1, inputs, outputs, null, 0xFFFFFFFF);
+    }
+
+    public static Transaction makeTransactionFromOutputs(Blockchain blockchain, KeyPair yourKeys, List<UTXOIdentifier> outputIDs, PublicKey reciverPub, long amount) {
+        List<Transaction> refTransactions = new ArrayList<>();
+        for(UTXOIdentifier id : outputIDs) {
+            refTransactions.add(blockchain.getTransactionByTXID(id.txid));
+        }
+
+        List<Output> all = new ArrayList<>();
+        for(int i = 0; i < refTransactions.size(); i++) {
+            all.add(refTransactions.get(i).outputs.get(outputIDs.get(i).outputIndex));
+        }
+
+        List<OutputWithID> included = new ArrayList<>();
+        long temp = amount;
+        for(int i = 0; i < all.size(); i++) {
+            temp-=all.get(i).amount;
+            included.add(new OutputWithID(outputIDs.get(i), all.get(i)));
+            if(temp < 0)
+                break;
+        }
+
+        //Not possible to make this transaction from these outputs
+        if(temp > 0) {
+            return null;
+        }
+
+        List<Input> inputs = new ArrayList<>();
+        for(int i = 0; i < included.size(); i++) {
+            byte[] partial = refTransactions.get(i).partialHash(included.get(i).id.outputIndex);
+
+            byte[] signature = ECSignatureUtils.sign(partial, yourKeys.getPrivate());
+            byte[] scriptSig = ScriptBuilder.generateP2PKSignature(signature, yourKeys.getPublic());
+
+            inputs.add(new Input(refTransactions.get(i).fullHash(),
+                    included.get(i).id.outputIndex,
+                    scriptSig.length,
+                    scriptSig,
+                    0xFFFFFFFF));
+        }
+
+        //Recivers output
+        byte[] scriptPubKey = ScriptBuilder.generateP2PKScript(reciverPub);
+        Output newOutput = new Output(amount, scriptPubKey.length, scriptPubKey);
+
+        //Calculate change
+        long sumOfInputs = included.stream().mapToLong(i->i.output.amount).sum();
+
+        //TODO: Fee?
+
+        //Change output
+        byte[] scriptPubKeyChange = ScriptBuilder.generateP2PKScript(yourKeys.getPublic());
+        Output changeOutput = new Output(sumOfInputs - amount, scriptPubKeyChange.length, scriptPubKeyChange);
+
+
+        return new Transaction(1, (short) 0, inputs.size(), 2, inputs, Arrays.asList(newOutput, changeOutput), null, 0xFFFFFFFF);
+    }
+
+    private static class OutputWithID {
+        public UTXOIdentifier id;
+        public Output output;
+
+        public OutputWithID(UTXOIdentifier id, Output output) {
+            this.id = id;
+            this.output = output;
+        }
     }
 }

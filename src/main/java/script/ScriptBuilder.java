@@ -6,6 +6,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.KeyPair;
 import java.security.PublicKey;
 
 public class ScriptBuilder {
@@ -94,6 +95,13 @@ public class ScriptBuilder {
                 .writeToStack(Ripemd160.getHash(DigestUtils.sha256(pub.getEncoded())))
                 .equalVerify()
                 .checkSig()
+                .end();
+    }
+
+    public static byte[] generateP2PKSignature(byte[] signature, PublicKey pub) {
+        return ScriptBuilder.newScript()
+                .writeToStack(signature)
+                .writeToStack(pub.getEncoded())
                 .end();
     }
 }

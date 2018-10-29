@@ -6,12 +6,17 @@ import apis.domain.requests.NewTransactionRequest;
 import apis.domain.responses.*;
 import apis.static_structures.Blockchain;
 import apis.static_structures.KnownNodesList;
+import apis.static_structures.TransactionPool;
 import apis.static_structures.UTXO;
 import apis.utils.BlockRESTWrapper;
 import apis.utils.BlockVerifier;
 import apis.utils.TransactionRESTWrapper;
+import apis.utils.TransactionVerifier;
 import domain.block.Block;
+import domain.block.StoredBlock;
+import domain.transaction.Output;
 import domain.transaction.Transaction;
+import domain.utxo.UTXOIdentifier;
 import node.Config;
 import node.SpecialJSONSerializer;
 import org.restlet.resource.ResourceException;
@@ -30,11 +35,13 @@ public class BlockAPI {
     private Blockchain blockchain;
     private UTXO utxo;
     private KnownNodesList knownNodesList;
+    private TransactionPool transactionPool;
     private Config config;
 
-    public BlockAPI(Blockchain blockchain, UTXO utxo, KnownNodesList knownNodesList, Config config) {
+    public BlockAPI(Blockchain blockchain, UTXO utxo, TransactionPool transactionPool, KnownNodesList knownNodesList, Config config) {
         this.blockchain = blockchain;
         this.utxo = utxo;
+        this.transactionPool = transactionPool;
         this.knownNodesList = knownNodesList;
         this.config = config;
     }
@@ -116,8 +123,42 @@ public class BlockAPI {
 
     private void addNewBlockAndManageUTXO(Block block) {
         blockchain.addBlock(block);
+
+        block.transactions.stream().forEach(t->{
+            for(int i = 0; i < t.inputs.size(); i++) {
+                utxo.makeBusy(new UTXOIdentifier(t.inputs.get(i).transactionHash, t.inputs.get(i).outputIndex));
+            }
+
+            transactionPool.remove(t.fullHash());
+        });
+
         blockchain.getUTXOCandidates().entrySet().stream().forEach(entry->{
             utxo.put(entry.getKey(), entry.getValue());
+        });
+
+        blockchain.getUTXORemovalCandidates().keySet().stream().forEach(key -> {
+            utxo.remove(key);
+        });
+
+        List<StoredBlock> pruned = blockchain.prune();
+        pruned.stream().forEach(s-> {
+            Block b = blockchain.getBlock(s.blockHeader.getHash());
+
+            b.transactions.stream().forEach(t->{
+
+                t.inputs.stream().forEach(input-> {
+                    UTXOIdentifier utxoIdentifier = new UTXOIdentifier(input.transactionHash, input.outputIndex);
+                    utxo.makeUnBusy(utxoIdentifier);
+                });
+
+                if(config.verifyTransactions) {
+                    if(TransactionVerifier.verifyTransaction(t)) {
+                        transactionPool.put(t);
+                    }
+                } else {
+                    transactionPool.put(t);
+                }
+            });
         });
     }
 

@@ -68,8 +68,8 @@ public class Node {
         transactionAPI = new TransactionAPI(transactionPool, knownNodesList);
         debugAPI = new DebugAPI(transactionPool);
         handshakeAPI = new HandshakeAPI(knownNodesList);
-        blockAPI = new BlockAPI(blockchain, utxo, knownNodesList, config);
-        utxoAPI = new UTXOAPI();
+        blockAPI = new BlockAPI(blockchain, utxo, transactionPool, knownNodesList, config);
+        utxoAPI = new UTXOAPI(utxo);
 
         if(!config.isInitial) {
 
@@ -127,9 +127,9 @@ public class Node {
         });
 
         http.path("/utxo", () -> {
-            http.get("/:pubkey", utxoAPI::fetchUTXO, gson::toJson);
+            http.get("/:txid/:index", utxoAPI::fetchUTXO, gson::toJson);
+            http.get("/:pubkey", utxoAPI::fetchUTXOByAddress, gson::toJson);
         });
-        /*get-utxo*/
 
         /*Debug*/
         http.path("/debug", () -> {
