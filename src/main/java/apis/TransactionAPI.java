@@ -9,8 +9,10 @@ import apis.static_structures.KnownNodesList;
 import apis.static_structures.TransactionPool;
 import apis.utils.BlockRESTWrapper;
 import apis.utils.TransactionRESTWrapper;
+import apis.utils.TransactionValidator;
 import apis.utils.TransactionVerifier;
 import domain.transaction.Transaction;
+import node.Config;
 import node.SpecialJSONSerializer;
 import org.restlet.resource.ResourceException;
 import spark.Request;
@@ -24,21 +26,33 @@ public class TransactionAPI {
 
     private TransactionPool transactionPool;
     private KnownNodesList knownNodesList;
+    private TransactionValidator transactionValidator;
+    private Config config;
 
-    public TransactionAPI(TransactionPool transactionPool, KnownNodesList knownNodesList) {
+    public TransactionAPI(TransactionPool transactionPool, KnownNodesList knownNodesList, TransactionValidator transactionValidator, Config config) {
         this.transactionPool = transactionPool;
         this.knownNodesList = knownNodesList;
+        this.transactionValidator = transactionValidator;
+        this.config = config;
     }
 
     public NewTransactionResponse newTransaction(Request request, Response response) {
         Transaction t = SpecialJSONSerializer.getInstance().fromJson(request.body(), NewTransactionRequest.class).transaction;
 
-        if (!TransactionVerifier.verifyTransaction(t)) {
-            return (NewTransactionResponse) new NewTransactionResponse().setError("Transaction didn't pass validation");
-        }
+        if(config.verifyTransactions) {
 
-        transactionPool.put(t);
-        retransmitTransaction(t.fullHash());
+            TransactionValidator.Result res = transactionValidator.validateTransaction(t);
+            if(res.passed) {
+                transactionPool.put(t);
+                retransmitTransaction(t.fullHash());
+            } else {
+                return (NewTransactionResponse) new NewTransactionResponse().setError("Transaction didn't pass validation");
+            }
+
+        } else {
+            transactionPool.put(t);
+            retransmitTransaction(t.fullHash());
+        }
 
         return new NewTransactionResponse();
     }
@@ -67,7 +81,20 @@ public class TransactionAPI {
             GetTransactionResponse gtr = TransactionRESTWrapper.getTransaction(h, txid);
 
             if (!gtr.error) {
-                transactionPool.put(gtr.transaction);
+                if(config.verifyTransactions) {
+
+                    TransactionValidator.Result res = transactionValidator.validateTransaction(gtr.transaction);
+                    if(res.passed) {
+                        transactionPool.put(gtr.transaction);
+                        retransmitTransaction(gtr.transaction.fullHash());
+                    } else {
+                        return (TransactionRetransmissionResponse) new TransactionRetransmissionResponse().setError("Transaction didn't pass validation");
+                    }
+
+                } else {
+                    transactionPool.put(gtr.transaction);
+                    retransmitTransaction(gtr.transaction.fullHash());
+                }
                 break;
             }
         }

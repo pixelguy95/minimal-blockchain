@@ -113,6 +113,12 @@ public class NodeTest {
      */
     @Test
     public void transactionPoolShare() throws InterruptedException {
+
+        node1.config.verifyTransactions = false;
+        node2.config.verifyTransactions = false;
+        node3.config.verifyTransactions = false;
+        node4.config.verifyTransactions = false;
+
         byte[] fakePartial = DigestUtils.sha256("This will be the partial hash".getBytes());
         byte[] fakeTransactionHash = DigestUtils.sha256("This will be the full hash".getBytes());
 

@@ -7,6 +7,7 @@ import apis.static_structures.KnownNodesList;
 import apis.static_structures.TransactionPool;
 import apis.static_structures.UTXO;
 import apis.utils.BlockRESTWrapper;
+import apis.utils.TransactionValidator;
 import com.google.gson.*;
 import db.DBHolder;
 import domain.block.Block;
@@ -65,7 +66,9 @@ public class Node {
         blockchain = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config);
         utxo = new UTXO(dbs.getUtxoDB());
 
-        transactionAPI = new TransactionAPI(transactionPool, knownNodesList);
+        TransactionValidator transactionValidator = new TransactionValidator(utxo, blockchain, transactionPool);
+
+        transactionAPI = new TransactionAPI(transactionPool, knownNodesList, transactionValidator, config);
         debugAPI = new DebugAPI(transactionPool);
         handshakeAPI = new HandshakeAPI(knownNodesList);
         blockAPI = new BlockAPI(blockchain, utxo, transactionPool, knownNodesList, config);
