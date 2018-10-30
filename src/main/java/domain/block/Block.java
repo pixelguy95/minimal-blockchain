@@ -54,7 +54,7 @@ public class Block implements Serializable , Validatable {
     }
 
     /**
-     * WARNING: This might be completly wrong, dont be afraid to change, make sure to run all tests after however
+     * WARNING: This might be completly wrong, dont be afraid to change, make sure to sync all tests after however
      * @return
      */
     public byte[] generateMerkeleRoot() {

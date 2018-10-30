@@ -22,7 +22,7 @@ public class Blockchain {
 
     private HashMap<ByteBuffer, StoredBlock> chain;
     private HashMap<ByteBuffer, StoredBlock> leafs;
-    private HashMap<ByteBuffer, StoredBlock> orphans;
+    private HashMap<ByteBuffer, Block> orphans;
     private DB blockDB;
     private DB metaDB;
     private DB blockHeaderDB;
@@ -96,7 +96,7 @@ public class Blockchain {
 
         } else if(config.allowOrphanBlocks){
             // orphan block
-            orphans.put(ByteBuffer.wrap(newHash), new StoredBlock(-1, block.header));
+            orphans.put(ByteBuffer.wrap(newHash), block);
         } else {
             throw new RuntimeException("No such prev block, orphans not allowed");
         }
@@ -111,25 +111,25 @@ public class Blockchain {
         while(orphans.size() > 0) {
 
             boolean keepGoing = false;
-            for(StoredBlock block : orphans.values()) {
-                if(orphans.containsKey(block.blockHeader.prevBlockHash))
+            for(Block block : orphans.values()) {
+                if(orphans.containsKey(block.header.prevBlockHash))
                     continue;
 
-                byte[] newHash = block.blockHeader.getHash();
-                if (leafs.containsKey(ByteBuffer.wrap(block.blockHeader.prevBlockHash))) {
+                byte[] newHash = block.header.getHash();
+                if (leafs.containsKey(ByteBuffer.wrap(block.header.prevBlockHash))) {
                     // new block, add after one of the leaves
-                    chain.put(ByteBuffer.wrap(newHash), new StoredBlock(leafs.get(ByteBuffer.wrap(block.blockHeader.prevBlockHash)).height + 1, block.blockHeader));
+                    chain.put(ByteBuffer.wrap(newHash), new StoredBlock(leafs.get(ByteBuffer.wrap(block.header.prevBlockHash)).height + 1, block.header));
                     leafs.put(ByteBuffer.wrap(newHash), chain.get(ByteBuffer.wrap(newHash)));
-                    leafs.remove(ByteBuffer.wrap(block.blockHeader.prevBlockHash));
+                    leafs.remove(ByteBuffer.wrap(block.header.prevBlockHash));
                     blockDB.put(newHash, SerializationUtils.serialize(block));
 
                     orphans.remove(ByteBuffer.wrap(newHash));
                     keepGoing = true;
                     break;
 
-                } else if (chain.containsKey(ByteBuffer.wrap(block.blockHeader.prevBlockHash))) {
+                } else if (chain.containsKey(ByteBuffer.wrap(block.header.prevBlockHash))) {
                     // contested block found.
-                    chain.put(ByteBuffer.wrap(newHash), new StoredBlock(chain.get(ByteBuffer.wrap(block.blockHeader.prevBlockHash)).height + 1, block.blockHeader));
+                    chain.put(ByteBuffer.wrap(newHash), new StoredBlock(chain.get(ByteBuffer.wrap(block.header.prevBlockHash)).height + 1, block.header));
                     leafs.put(ByteBuffer.wrap(newHash), chain.get(ByteBuffer.wrap(newHash)));
                     blockDB.put(newHash, SerializationUtils.serialize(block));
 
