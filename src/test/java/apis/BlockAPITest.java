@@ -117,6 +117,40 @@ public class BlockAPITest {
         Assert.assertEquals(hashes.size(), 1);
     }
 
+
+    @Test
+    public void getAllBlockHashesCheckSorted() {
+        Block genesis = node.blockchain.getGenesisBlock();
+        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), pair.getPublic());
+        Block block2 = new Block(Arrays.asList(), block1.header.getHash(), pair.getPublic());
+        Block block3 = new Block(Arrays.asList(), block2.header.getHash(), pair.getPublic());
+        Block block4 = new Block(Arrays.asList(), block3.header.getHash(), pair.getPublic());
+
+        List<String> hashes = BlockRESTWrapper.getAllBlockHashes(localHost).hashes;
+        Assert.assertTrue(hashes.contains(Base64.getUrlEncoder().withoutPadding().encodeToString(genesis.header.getHash())));
+        Assert.assertFalse(hashes.contains(Base64.getUrlEncoder().withoutPadding().encodeToString(block1.header.getHash())));
+
+        BooleanResponse r = BlockRESTWrapper.newBlock(localHost, block1);
+        Assert.assertTrue(!r.error);
+        r = BlockRESTWrapper.newBlock(localHost, block2);
+        Assert.assertTrue(!r.error);
+        r = BlockRESTWrapper.newBlock(localHost, block3);
+        Assert.assertTrue(!r.error);
+        r = BlockRESTWrapper.newBlock(localHost, block4);
+        Assert.assertTrue(!r.error);
+
+        hashes = BlockRESTWrapper.getAllBlockHashes(localHost).hashes;
+        assertEquals(ByteBuffer.wrap(Base64.getUrlDecoder().decode(hashes.get(0))), ByteBuffer.wrap(genesis.header.getHash()));
+        assertEquals(ByteBuffer.wrap(Base64.getUrlDecoder().decode(hashes.get(1))), ByteBuffer.wrap(block1.header.getHash()));
+        assertEquals(ByteBuffer.wrap(Base64.getUrlDecoder().decode(hashes.get(2))), ByteBuffer.wrap(block2.header.getHash()));
+        assertEquals(ByteBuffer.wrap(Base64.getUrlDecoder().decode(hashes.get(3))), ByteBuffer.wrap(block3.header.getHash()));
+        assertEquals(ByteBuffer.wrap(Base64.getUrlDecoder().decode(hashes.get(4))), ByteBuffer.wrap(block4.header.getHash()));
+
+        hashes = BlockRESTWrapper.getAllBlockHashesFromHeight(localHost, 3).hashes;
+        assertEquals(ByteBuffer.wrap(Base64.getUrlDecoder().decode(hashes.get(0))), ByteBuffer.wrap(block3.header.getHash()));
+        assertEquals(ByteBuffer.wrap(Base64.getUrlDecoder().decode(hashes.get(1))), ByteBuffer.wrap(block4.header.getHash()));
+    }
+
     /**
      * This test relies on the saved genesis key pair file.
      * Without it the test will fail
@@ -172,15 +206,13 @@ public class BlockAPITest {
         Block block11 = new Block(Arrays.asList(), block10.header.getHash(), pair.getPublic());
 
         BlockRESTWrapper.newBlock(localHost, block7);
-        Thread.sleep(70);
         BlockRESTWrapper.newBlock(localHost, block8);
-        Thread.sleep(70);
         BlockRESTWrapper.newBlock(localHost, block9);
-        Thread.sleep(70);
         BlockRESTWrapper.newBlock(localHost, block10);
-        Thread.sleep(70);
         BlockRESTWrapper.newBlock(localHost, block11);
-        Thread.sleep(1000);
+
+        while(node.utxo.busy.size() > 0)
+            Thread.sleep(100);
 
         assertEquals(node.utxo.busy.size(), 0);
     }

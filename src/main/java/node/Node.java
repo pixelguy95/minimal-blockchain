@@ -6,25 +6,18 @@ import apis.static_structures.Blockchain;
 import apis.static_structures.KnownNodesList;
 import apis.static_structures.TransactionPool;
 import apis.static_structures.UTXO;
-import apis.utils.BlockRESTWrapper;
+import apis.utils.BlockValidator;
 import apis.utils.TransactionValidator;
 import com.google.gson.*;
 import db.DBHolder;
-import domain.block.Block;
 import node.tasks.BlockSync;
 import node.tasks.NetworkSetup;
 
 import java.io.IOException;
-import java.math.BigInteger;
-import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.restlet.resource.ResourceException;
-import security.ECKeyManager;
 import spark.Service;
 import utils.RESTUtils;
 
@@ -67,11 +60,12 @@ public class Node {
         utxo = new UTXO(dbs.getUtxoDB());
 
         TransactionValidator transactionValidator = new TransactionValidator(utxo, blockchain, transactionPool);
+        BlockValidator blockValidator = new BlockValidator(utxo, blockchain, transactionPool);
 
         transactionAPI = new TransactionAPI(transactionPool, knownNodesList, transactionValidator, config);
         debugAPI = new DebugAPI(transactionPool);
         handshakeAPI = new HandshakeAPI(knownNodesList);
-        blockAPI = new BlockAPI(blockchain, utxo, transactionPool, knownNodesList, config);
+        blockAPI = new BlockAPI(blockchain, utxo, transactionPool, blockValidator, transactionValidator, knownNodesList, config);
         utxoAPI = new UTXOAPI(utxo);
 
         if(!config.isInitial) {
@@ -84,7 +78,10 @@ public class Node {
 
             knownNodesList.addNode(config.initialConnection);
             new NetworkSetup(new AtomicBoolean(true), config, knownNodesList, blockchain).run();
-            new BlockSync(new AtomicBoolean(true), knownNodesList, blockchain).run();
+            if(!new BlockSync(knownNodesList, blockchain, utxo, transactionPool, config, blockValidator, transactionValidator).sync()) {
+                isRunning.set(false);
+                return;
+            }
         }
 
         setUpEndPoints(config);

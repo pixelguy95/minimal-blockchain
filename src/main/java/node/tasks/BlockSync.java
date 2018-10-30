@@ -4,26 +4,49 @@ import apis.domain.Host;
 import apis.domain.responses.GetAllBlockHashesResponse;
 import apis.static_structures.Blockchain;
 import apis.static_structures.KnownNodesList;
-import apis.utils.BlockRESTWrapper;
+import apis.static_structures.TransactionPool;
+import apis.static_structures.UTXO;
+import apis.utils.*;
 import domain.block.Block;
+import node.Config;
+import org.apache.commons.collections4.ListUtils;
 import org.restlet.resource.ResourceException;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-public class BlockSync extends AbstractTask {
+public class BlockSync {
 
     private KnownNodesList knownNodesList;
     private Blockchain blockchain;
+    private UTXO utxo;
+    private TransactionPool transactionPool;
 
-    public BlockSync(AtomicBoolean keepAlive, KnownNodesList knownNodesList, Blockchain blockchain) {
-        super(keepAlive);
+    private Config config;
+
+    private BlockValidator blockValidator;
+    private TransactionValidator transactionValidator;
+
+
+    public BlockSync(KnownNodesList knownNodesList,
+                     Blockchain blockchain,
+                     UTXO utxo,
+                     TransactionPool transactionPool,
+                     Config config,
+                     BlockValidator blockValidator,
+                     TransactionValidator transactionValidator) {
         this.knownNodesList = knownNodesList;
         this.blockchain = blockchain;
+        this.utxo = utxo;
+        this.transactionPool = transactionPool;
+        this.config = config;
+        this.blockValidator = blockValidator;
+        this.transactionValidator = transactionValidator;
     }
 
     /**
+     * Below text is a bit old now
+     *
      * WARNING!
      * This will work given that the block chain is small.
      * If there are 100.000 blocks all of them 1MB you will roughly have to load 100GB into memory.
@@ -33,19 +56,37 @@ public class BlockSync extends AbstractTask {
      * This can not be derived from hashes alone though.
      *
      */
-    @Override
-    public void run() {
-        HashSet<String> blockHashes = getHashSetOfAllBlocks();
-        List<Block> blockBuffer = getBlocksFromDifferentNodes(blockHashes);
+    public boolean sync() {
+        List<List<String>> partitionedHashes = ListUtils.partition(
+                new ArrayList<>(getHashSetOfAllBlocks(blockchain.getBestHeight() - 1)), 10);
 
-        blockBuffer.stream().forEach(b->blockchain.addBlock(b));
+        for(List<String> partition : partitionedHashes) {
+            List<Block> blocksInThisPartition = getBlocksFromDifferentNodes(partition);
+
+            for(Block b : blocksInThisPartition) {
+                if(!blockchain.getChain().containsKey(b.header.getHash())) {
+
+                    if(config.verifyNewBlocks) {
+                        Validator.Result result = blockValidator.validate(b);
+                        if(result.passed) {
+                            BlockAddingManager.addBlockAndManageUTXOs(blockchain, utxo, transactionPool, transactionValidator, config, b);
+                        } else {
+                            System.err.println("Block sync failed: " + result.resaon);
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
-    private HashSet<String> getHashSetOfAllBlocks() {
+    private HashSet<String> getHashSetOfAllBlocks(long height) {
         HashSet<String> ret = new HashSet<>();
         for(Host h : knownNodesList.getKnownNodes()) {
             try {
-                GetAllBlockHashesResponse response = BlockRESTWrapper.getAllBlockHashes(h);
+                GetAllBlockHashesResponse response = BlockRESTWrapper.getAllBlockHashesFromHeight(h, (int)height);
                 ret.addAll(response.hashes);
             } catch (ResourceException e) {
 
@@ -55,7 +96,7 @@ public class BlockSync extends AbstractTask {
         return ret;
     }
 
-    private List<Block> getBlocksFromDifferentNodes(HashSet<String> blockHashes) {
+    private List<Block> getBlocksFromDifferentNodes(List<String> blockHashes) {
         List<Block> blockBuffer = new ArrayList<>();
         for(String hash : blockHashes) {
             byte[] byteHash = Base64.getUrlDecoder().decode(hash);
