@@ -1,6 +1,7 @@
 package block;
 
 import org.junit.Test;
+import utils.MerkleTreeUtils;
 
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -17,7 +18,6 @@ public class TestMerkleTree {
     public void testCreateMerkleTreeFullPair() {
 
         try {
-            MerkleTree mt = new MerkleTree();
             Random r = new Random(System.currentTimeMillis());
 
             byte[] first = new byte[32];
@@ -39,7 +39,7 @@ public class TestMerkleTree {
 
             byte[] shouldBe = doubleSHA256(doubleSHA256(first, second), doubleSHA256(third, forth));
 
-            assertArrayEquals(mt.createMerkle(l), shouldBe);
+            assertArrayEquals(MerkleTreeUtils.createMerkle(l), shouldBe);
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -50,7 +50,6 @@ public class TestMerkleTree {
     public void testCreateMerkleTreeIncompletePair() {
 
         try {
-            MerkleTree mt = new MerkleTree();
             Random r = new Random(System.currentTimeMillis());
 
             byte[] first = new byte[32];
@@ -69,7 +68,7 @@ public class TestMerkleTree {
 
             byte[] shouldBe = doubleSHA256(doubleSHA256(first, second), doubleSHA256(third, third));
 
-            assertArrayEquals(mt.createMerkle(l), shouldBe);
+            assertArrayEquals(MerkleTreeUtils.createMerkle(l), shouldBe);
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -78,25 +77,19 @@ public class TestMerkleTree {
 
     @Test
     public void testOnlyOne() {
-        try {
-            MerkleTree mt = new MerkleTree();
-            Random r = new Random(System.currentTimeMillis());
 
-            byte[] first = new byte[32];
+        Random r = new Random(System.currentTimeMillis());
 
-            r.nextBytes(first);
+        byte[] first = new byte[32];
 
-            List<byte[]> l = new LinkedList<>();
+        r.nextBytes(first);
+        List<byte[]> l = new LinkedList<>();
 
-            l.add(first.clone());;
+        l.add(first.clone());;
 
-            assertArrayEquals(mt.createMerkle(l), first);
+        assertArrayEquals(MerkleTreeUtils.createMerkle(l), first);
 
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
     }
-
 
     private byte[] doubleSHA256(byte[] first, byte[] second) throws NoSuchAlgorithmException {
 
@@ -104,6 +97,4 @@ public class TestMerkleTree {
         return md.digest(md.digest(ByteBuffer.allocate(64).put(first).put(second).array()));
 
     }
-
-
 }

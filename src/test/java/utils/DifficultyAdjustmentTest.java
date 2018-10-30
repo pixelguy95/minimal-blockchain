@@ -1,6 +1,7 @@
 package utils;
 
 import domain.block.BlockHeader;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -23,6 +24,14 @@ public class DifficultyAdjustmentTest {
         assertEquals(new BigInteger("22829202948393929850749706076701368331072452018388575715328"), DifficultyAdjustment.calculateTarget(hexStringToByteArray("1903a30c")));
     }
 
+
+    @Test
+    public void testTargetToBits(){
+
+        assertEquals(new BigInteger("22829202948393929850749706076701368331072452018388575715328"),
+                DifficultyAdjustment.calculateTarget(
+                        DifficultyAdjustment.toCompactFormat(new BigInteger("22829202948393929850749706076701368331072452018388575715328"))));
+    }
 
     public static byte[] hexStringToByteArray(String s) {
         int len = s.length();

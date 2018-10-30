@@ -1,26 +1,18 @@
-package block;
+package utils;
+
+import org.apache.commons.codec.digest.DigestUtils;
 
 import java.nio.ByteBuffer;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
-@Deprecated
-/**
- * See MerkeleTreeUtils
- */
-public class MerkleTree {
+public class MerkleTreeUtils {
 
-    private MessageDigest md;
+    private MerkleTreeUtils(){ }
 
-    MerkleTree() throws NoSuchAlgorithmException {
-        this.md = MessageDigest.getInstance("SHA-256");
-    }
-
-    public byte[] createMerkle(List<byte[]> leaves){
+    public static byte[] createMerkle(List<byte[]> leaves){
 
         if(leaves.isEmpty()){
-            return null;
+            return DigestUtils.sha256("place holder");
         }
 
         while (leaves.size() > 1){
@@ -40,7 +32,7 @@ public class MerkleTree {
         return leaves.get(0);
     }
 
-    private byte[] doubleSHA256(byte[] first, byte[] second) {
-        return md.digest(md.digest(ByteBuffer.allocate(64).put(first).put(second).array()));
+    private static byte[] doubleSHA256(byte[] first, byte[] second) {
+        return DigestUtils.sha256(DigestUtils.sha256(ByteBuffer.allocate(first.length + second.length).put(first).put(second).array()));
     }
 }

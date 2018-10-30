@@ -4,18 +4,13 @@ import domain.Validatable;
 import domain.transaction.CoinbaseTransaction;
 import domain.transaction.Output;
 import domain.transaction.Transaction;
-import io.nayuki.bitcoin.crypto.Ripemd160;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.SerializationUtils;
 import script.ScriptBuilder;
 import security.ECKeyManager;
-import utils.MerkeleTreeUtils;
+import utils.MerkleTreeUtils;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Base64;
@@ -60,7 +55,7 @@ public class Block implements Serializable , Validatable {
     public byte[] generateMerkeleRoot() {
         List<byte[]> transactionBytes = transactions.stream().map(t->t.serialize()).collect(Collectors.toList());
         transactionBytes.add(coinbase.serialize());
-        return MerkeleTreeUtils.createMerkle(transactionBytes);
+        return MerkleTreeUtils.createMerkle(transactionBytes);
     }
 
     public boolean equals(Object o) {

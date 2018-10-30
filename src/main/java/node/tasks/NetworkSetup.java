@@ -8,15 +8,10 @@ import apis.domain.responses.GetAddrResponse;
 import apis.domain.responses.HandshakeResponse;
 import apis.static_structures.Blockchain;
 import apis.static_structures.KnownNodesList;
-import block.Block;
 import node.Config;
 import utils.RESTUtils;
 
-import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NetworkSetup extends AbstractTask {
