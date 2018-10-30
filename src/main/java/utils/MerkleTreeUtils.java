@@ -3,11 +3,20 @@ package utils;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MerkleTreeUtils {
 
     private MerkleTreeUtils(){ }
+
+    public static byte[] getMerkleRootFromSerTxList(List<byte[]> leaves){
+        List<byte[]> l = new ArrayList<>();
+        for(byte[] bytes : leaves){
+            l.add(doubleSHA256Single(bytes));
+        }
+        return createMerkle(l);
+    }
 
     public static byte[] createMerkle(List<byte[]> leaves){
 
@@ -34,5 +43,9 @@ public class MerkleTreeUtils {
 
     private static byte[] doubleSHA256(byte[] first, byte[] second) {
         return DigestUtils.sha256(DigestUtils.sha256(ByteBuffer.allocate(first.length + second.length).put(first).put(second).array()));
+    }
+
+    private static byte[] doubleSHA256Single(byte[] first) {
+        return DigestUtils.sha256(DigestUtils.sha256(ByteBuffer.allocate(first.length).put(first).array()));
     }
 }
