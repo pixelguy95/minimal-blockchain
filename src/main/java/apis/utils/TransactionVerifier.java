@@ -2,6 +2,7 @@ package apis.utils;
 
 import domain.transaction.Transaction;
 
+@Deprecated
 public class TransactionVerifier {
 
     /**

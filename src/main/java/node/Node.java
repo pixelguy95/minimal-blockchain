@@ -117,6 +117,7 @@ public class Node {
         http.path("/block", () -> {
             http.get("/height", blockAPI::getCurrentBlockHeight, gson::toJson);
             http.get("/all", blockAPI::getAllBlockHashes, gson::toJson);
+            http.get("/from/:height", blockAPI::getAllBlockHashesFromHeight, gson::toJson);
             http.get("/retransmission/:blockhash", blockAPI::retransmittedBlock, gson::toJson);
             http.get("/:blockhash", blockAPI::getBlock, gson::toJson);
             http.post("", blockAPI::newBlockFound, gson::toJson);

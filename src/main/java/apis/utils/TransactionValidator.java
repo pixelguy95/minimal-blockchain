@@ -3,6 +3,7 @@ package apis.utils;
 import apis.static_structures.Blockchain;
 import apis.static_structures.TransactionPool;
 import apis.static_structures.UTXO;
+import domain.Validatable;
 import domain.transaction.Input;
 import domain.transaction.Output;
 import domain.transaction.Transaction;
@@ -10,7 +11,7 @@ import domain.utxo.UTXOIdentifier;
 import org.apache.commons.lang.ArrayUtils;
 import script.ScriptExecutor;
 
-public class TransactionValidator {
+public class TransactionValidator implements Validator{
     private UTXO utxo;
     private Blockchain blockchain;
     private TransactionPool transactionPool;
@@ -21,7 +22,10 @@ public class TransactionValidator {
         this.transactionPool = transactionPool;
     }
 
-    public Result validateTransaction(Transaction transaction) {
+    @Override
+    public Result validate(Validatable v) {
+
+        Transaction transaction = (Transaction)v;
 
         long inputSum = 0;
         for(Input i : transaction.inputs) {
@@ -53,18 +57,5 @@ public class TransactionValidator {
         }
 
         return new Result();
-    }
-
-    public static class Result {
-        public String resaon = "";
-        public boolean passed = true;
-
-        public Result(String resaon) {
-            passed = false;
-            this.resaon = resaon;
-        }
-
-        public Result() {
-        }
     }
 }

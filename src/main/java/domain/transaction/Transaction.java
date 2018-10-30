@@ -1,6 +1,7 @@
 package domain.transaction;
 
 import apis.static_structures.Blockchain;
+import domain.Validatable;
 import domain.utxo.UTXOIdentifier;
 import io.nayuki.bitcoin.crypto.Base58Check;
 import io.nayuki.bitcoin.crypto.Ripemd160;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 /**
  * https://en.bitcoin.it/wiki/Transaction
  */
-public class Transaction implements Serializable {
+public class Transaction implements Serializable, Validatable {
     public int version;
     public short flag;
     public long inCounter;

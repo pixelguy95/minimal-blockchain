@@ -41,7 +41,7 @@ public class TransactionAPI {
 
         if(config.verifyTransactions) {
 
-            TransactionValidator.Result res = transactionValidator.validateTransaction(t);
+            TransactionValidator.Result res = transactionValidator.validate(t);
             if(res.passed) {
                 transactionPool.put(t);
                 retransmitTransaction(t.fullHash());
@@ -83,7 +83,7 @@ public class TransactionAPI {
             if (!gtr.error) {
                 if(config.verifyTransactions) {
 
-                    TransactionValidator.Result res = transactionValidator.validateTransaction(gtr.transaction);
+                    TransactionValidator.Result res = transactionValidator.validate(gtr.transaction);
                     if(res.passed) {
                         transactionPool.put(gtr.transaction);
                         retransmitTransaction(gtr.transaction.fullHash());

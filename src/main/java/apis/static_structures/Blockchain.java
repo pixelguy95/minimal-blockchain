@@ -7,23 +7,18 @@ import domain.transaction.Transaction;
 import domain.utxo.UTXOIdentifier;
 import node.Config;
 import org.apache.commons.lang.SerializationUtils;
-import org.apache.commons.lang.math.IntRange;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 
-import java.awt.image.ByteLookupTable;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class Blockchain {
 
-    public static final String genesisBlockHash = "BZeoTngFEB0OjdlbMUhK-tsChbIL9aHhvXohh2mpwhs";
+    private static byte[] genesisBlockHash = null;
 
     private HashMap<ByteBuffer, StoredBlock> chain;
     private HashMap<ByteBuffer, StoredBlock> leafs;
@@ -59,6 +54,7 @@ public class Blockchain {
                 leafs = new HashMap<>();
             }
 
+            genesisBlockHash = metaDB.get("genesisblockhash".getBytes());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -95,6 +91,8 @@ public class Blockchain {
             chain.put(ByteBuffer.wrap(newHash), new StoredBlock(0, block.header));
             leafs.put(ByteBuffer.wrap(newHash), chain.get(ByteBuffer.wrap(newHash)));
             blockDB.put(newHash, SerializationUtils.serialize(block));
+            genesisBlockHash = newHash;
+            metaDB.put("genesisblockhash".getBytes(), newHash);
 
         } else if(config.allowOrphanBlocks){
             // orphan block
@@ -296,7 +294,7 @@ public class Blockchain {
     }
 
     public synchronized Block getGenesisBlock() {
-        return (Block) SerializationUtils.deserialize(blockDB.get(Base64.getUrlDecoder().decode(genesisBlockHash)));
+        return (Block) SerializationUtils.deserialize(blockDB.get(genesisBlockHash));
     }
 
     private HashMap<ByteBuffer, StoredBlock> deserilizeLeafs(byte[] leafBytes) {

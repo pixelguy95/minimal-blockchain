@@ -69,6 +69,9 @@ public class DBHolder {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        File dir = new File(dbFolder);
+        dir.deleteOnExit();
     }
 
     public void closeAll() throws IOException {

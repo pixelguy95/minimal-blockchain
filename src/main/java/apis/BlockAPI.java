@@ -25,9 +25,7 @@ import spark.Response;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class BlockAPI {
@@ -114,6 +112,20 @@ public class BlockAPI {
     public GetAllBlockHashesResponse getAllBlockHashes(Request request, Response response) {
 
         List<String> hashes = blockchain.getChain().values().stream()
+                .sorted(Comparator.comparing(StoredBlock::height))
+                .map(storedBlock->storedBlock.blockHeader.getHash())
+                .map(hash->Base64.getUrlEncoder().withoutPadding().encodeToString(hash))
+                .collect(Collectors.toList());
+
+        return new GetAllBlockHashesResponse(hashes);
+    }
+
+    public GetAllBlockHashesResponse getAllBlockHashesFromHeight(Request request, Response response) {
+        int height = Integer.parseInt(request.params("height"));
+
+        List<String> hashes = blockchain.getChain().values().stream()
+                .filter(storedBlock -> storedBlock.height >= height)
+                .sorted(Comparator.comparing(StoredBlock::height))
                 .map(storedBlock->storedBlock.blockHeader.getHash())
                 .map(hash->Base64.getUrlEncoder().withoutPadding().encodeToString(hash))
                 .collect(Collectors.toList());

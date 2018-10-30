@@ -1,5 +1,6 @@
 package domain.block;
 
+import domain.Validatable;
 import domain.transaction.CoinbaseTransaction;
 import domain.transaction.Output;
 import domain.transaction.Transaction;
@@ -21,7 +22,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Block implements Serializable {
+public class Block implements Serializable , Validatable {
     public int blockSize;
     public BlockHeader header;
     public long transactionCounter;

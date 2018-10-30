@@ -101,6 +101,22 @@ public class BlockAPITest {
         Assert.assertTrue(hashes.contains(Base64.getUrlEncoder().withoutPadding().encodeToString(block1.header.getHash())));
     }
 
+    @Test
+    public void getAllBlockHashesWithHeight() {
+        Block genesis = node.blockchain.getGenesisBlock();
+        Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), pair.getPublic());
+        List<String> hashes = BlockRESTWrapper.getAllBlockHashes(localHost).hashes;
+        Assert.assertTrue(hashes.contains(Base64.getUrlEncoder().withoutPadding().encodeToString(genesis.header.getHash())));
+        Assert.assertFalse(hashes.contains(Base64.getUrlEncoder().withoutPadding().encodeToString(block1.header.getHash())));
+
+        BooleanResponse r = BlockRESTWrapper.newBlock(localHost, block1);
+        Assert.assertTrue(!r.error);
+
+        hashes = BlockRESTWrapper.getAllBlockHashesFromHeight(localHost, 1).hashes;
+        Assert.assertTrue(hashes.contains(Base64.getUrlEncoder().withoutPadding().encodeToString(block1.header.getHash())));
+        Assert.assertEquals(hashes.size(), 1);
+    }
+
     /**
      * This test relies on the saved genesis key pair file.
      * Without it the test will fail
@@ -164,9 +180,8 @@ public class BlockAPITest {
         BlockRESTWrapper.newBlock(localHost, block10);
         Thread.sleep(70);
         BlockRESTWrapper.newBlock(localHost, block11);
-        Thread.sleep(500);
+        Thread.sleep(1000);
 
-        System.out.println(node.utxo.busy.size());
-        assertTrue(node.utxo.busy.size() == 0);
+        assertEquals(node.utxo.busy.size(), 0);
     }
 }

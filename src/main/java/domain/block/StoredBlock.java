@@ -13,4 +13,8 @@ public class StoredBlock implements Serializable {
     public byte[] hashOfThisBlock() {
         return blockHeader.getHash();
     }
+
+    public long height() {
+        return height;
+    }
 }

@@ -32,4 +32,8 @@ public class BlockRESTWrapper {
     public static TransactionRetransmissionResponse retransmitBlock(Host host, byte[] txid) {
         return RESTUtils.get(host, "block/retransmission", TransactionRetransmissionResponse.class, Arrays.asList(Base64.getUrlEncoder().withoutPadding().encodeToString(txid)));
     }
+
+    public static GetAllBlockHashesResponse getAllBlockHashesFromHeight(Host host, int h) {
+        return RESTUtils.get(host, "block/from", GetAllBlockHashesResponse.class, Arrays.asList(String.valueOf(h)));
+    }
 }
