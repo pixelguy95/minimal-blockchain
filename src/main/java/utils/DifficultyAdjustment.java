@@ -1,5 +1,9 @@
 package utils;
 
+import apis.static_structures.Blockchain;
+import domain.block.Block;
+import org.apache.commons.lang.SerializationUtils;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -60,6 +64,9 @@ public class DifficultyAdjustment {
         return output;
     }
 
+    /**
+     * Quite stupid but only run once each block start so no biggie
+     */
     private static byte[] postPendByte(byte[] origin, byte b){
 
         byte[] output = new byte[1 + origin.length];
@@ -91,9 +98,26 @@ public class DifficultyAdjustment {
     }
 
 
-    public static long calculateNewTarget(byte[] oldTarget, int minutesLastPeriod){
+    public static byte[] getNextBlockBits(Blockchain bchain, long currentTime){
 
-        return fromByteArray(oldTarget) * (minutesLastPeriod / 20160);
+        Block b = bchain.getTopBlock();
+
+        if(bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).height + 1  % 2016 != 0 ){
+            return b.header.difficultyBits;
+        }
+
+        long bcheight = bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).height;
+        byte[] difficultyBits = b.header.difficultyBits;
+
+        b = bchain.getBlock(b.header.prevBlockHash);
+
+        while(b != null) {
+            if(bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).height == bcheight - 2016){
+                return toCompactFormat(calculateTarget(difficultyBits).multiply(BigInteger.valueOf((currentTime - b.header.time))).divide(BigInteger.valueOf(20160)));
+            }
+            b = bchain.getBlock(b.header.prevBlockHash);
+        }
+        return null;
     }
     
 }

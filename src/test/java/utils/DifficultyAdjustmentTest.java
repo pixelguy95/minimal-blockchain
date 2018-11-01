@@ -1,10 +1,19 @@
 package utils;
 
+import apis.static_structures.Blockchain;
+import apis.static_structures.KnownNodesList;
+import apis.static_structures.TransactionPool;
+import db.DBHolder;
+import domain.block.Block;
 import domain.block.BlockHeader;
+import node.Config;
 import org.junit.Assert;
 import org.junit.Test;
+import security.ECKeyManager;
 
 import java.math.BigInteger;
+import java.security.KeyPair;
+import java.util.ArrayList;
 
 import static org.junit.Assert.*;
 
@@ -24,7 +33,6 @@ public class DifficultyAdjustmentTest {
         assertEquals(new BigInteger("22829202948393929850749706076701368331072452018388575715328"), DifficultyAdjustment.calculateTarget(hexStringToByteArray("1903a30c")));
     }
 
-
     @Test
     public void testTargetToBits(){
 
@@ -42,32 +50,63 @@ public class DifficultyAdjustmentTest {
         }
         return data;
     }
+
     @Test
-    public void removeLater(){
-        mineBlock();
+    public void blockBitsNotModulus2016Test(){
+        final String[] initialNodeArgs = new String[]{"-i", "-p", "13337", "-db", ".local-persistence-wth1"};
+
+        Config config = new Config(initialNodeArgs);
+
+        DBHolder dbs = new DBHolder(config.dbFolder);
+
+        dbs.destroy(config.dbFolder);
+        dbs.restart(config.dbFolder);
+
+        Blockchain blockchain = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config);
+
+        KeyPair pair = ECKeyManager.generateNewKeyPair();
+
+        assert pair != null;
+        Block b = new Block(new ArrayList<>(), blockchain.getTopBlock().header.getHash(), pair.getPublic());
+        b.header.difficultyBits = hexStringToByteArray("1903a30c");
+        blockchain.addBlock(b);
+
+        assertArrayEquals(b.header.difficultyBits, DifficultyAdjustment.getNextBlockBits(blockchain, 0));
     }
 
-    protected void mineBlock()  {
+    @Test
 
-        // Blockheader should not be created here but...
+    /*
+     * Example is from actual time period between block
+     * 100800 - 102816
+     * Jan 3, 2011 6:10:11 AM - Jan 15, 2011 3:26:07 PM
+     * 1294035011 - 1295105167
+     *
+     */
+    public void blockBitsModulus2016Test(){
+        final String[] initialNodeArgs = new String[]{"-i", "-p", "13337", "-db", ".local-persistence-wth1"};
 
-        // "1d00ffff" is the difficulty bits Satoshi chose back in the day
-        BlockHeader bh = new BlockHeader(1, new byte[4], new byte[4], hexStringToByteArray("1d00ffff"));
+        Config config = new Config(initialNodeArgs);
 
-        BigInteger target = DifficultyAdjustment.calculateTarget(bh.difficultyBits);
+        DBHolder dbs = new DBHolder(config.dbFolder);
 
-        int i = 0;
-        while( (new BigInteger(bh.getHash()).compareTo(target)) < 0){
-            bh.incrementNonce();
-            if( i % 1000000 == 0 ){
-                System.out.print(". ");
-                if(i % 10000000 == 0){
-                    System.out.println("");
-                }
-            }
-            i++;
+        dbs.destroy(config.dbFolder);
+        dbs.restart(config.dbFolder);
+
+        Blockchain blockchain = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config);
+
+        KeyPair pair = ECKeyManager.generateNewKeyPair();
+
+        assert pair != null;
+        for(int i = 0; i < 2014; i++){
+            Block b = new Block(new ArrayList<>(), blockchain.getTopBlock().header.getHash(), pair.getPublic());
+            b.header.difficultyBits = hexStringToByteArray("1b0404cb");
+            b.header.time = 1294035011;
+            blockchain.addBlock(b);
         }
-        System.out.println("BLOCK SUCCESSFULLY MINED WITH HASH: " + new String(bh.getHash()));
+
+        assertArrayEquals(hexStringToByteArray("1b038dee"), DifficultyAdjustment.getNextBlockBits(blockchain, 1295105167));
     }
+
 
 }

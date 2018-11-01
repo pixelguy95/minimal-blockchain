@@ -1,4 +1,4 @@
-package block;
+package utils;
 
 import org.junit.Test;
 import utils.MerkleTreeUtils;
@@ -12,7 +12,7 @@ import java.util.Random;
 
 import static org.junit.Assert.*;
 
-public class TestMerkleTree {
+public class MerkleTreeTest {
 
     @Test
     public void testCreateMerkleTreeFullPair() {

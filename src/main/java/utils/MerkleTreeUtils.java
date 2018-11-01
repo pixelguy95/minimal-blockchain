@@ -10,9 +10,9 @@ public class MerkleTreeUtils {
 
     private MerkleTreeUtils(){ }
 
-    public static byte[] getMerkleRootFromSerTxList(List<byte[]> leaves){
+    public static byte[] getMerkleRootFromSerTxList(List<byte[]> txs){
         List<byte[]> l = new ArrayList<>();
-        for(byte[] bytes : leaves){
+        for(byte[] bytes : txs){
             l.add(doubleSHA256Single(bytes));
         }
         return createMerkle(l);
