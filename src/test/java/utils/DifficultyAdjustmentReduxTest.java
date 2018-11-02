@@ -19,10 +19,6 @@ import static org.junit.Assert.*;
 public class DifficultyAdjustmentReduxTest {
 
     @Test
-    public void getNextBlockBits() {
-    }
-
-    @Test
     public void toLarge() {
         assertEquals(DifficultyAdjustmentRedux.toTarget(0x1b0404cb), new BigInteger("00000000000404CB000000000000000000000000000000000000000000000000", 16));
     }
@@ -80,8 +76,8 @@ public class DifficultyAdjustmentReduxTest {
         Blockchain blockchain = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config, genesis);
 
 
-        long diff = 1295105167 - 1294035011;
-        long current = 1294035011 + diff;
+        long diff = (1295105167 - 1294035011) / DifficultyAdjustmentRedux.RECALCULATE_HEIGHT;
+        long current = 1294035011;
         assert pair != null;
         for(int i = 0; i < 2015; i++){
             Block b = new Block(new ArrayList<>(), blockchain.getTopBlock().header.getHash(), pair.getPublic());
@@ -91,11 +87,11 @@ public class DifficultyAdjustmentReduxTest {
             blockchain.addBlock(b);
         }
 
-        long newBits = DifficultyAdjustmentRedux.getNextBlockBits(blockchain, 1295105167);
+        long newBits = DifficultyAdjustmentRedux.getNextBlockBits(blockchain);
         assertTrue(0x1b0404cb > newBits);
 
         System.out.println("OPTIMAL BLOCKTIME / TEST BLOCK TIME");
-        System.out.println((double)(DifficultyAdjustmentRedux.TARGET_BLOCK_TIME * DifficultyAdjustmentRedux.RECALCULATE_HEIGHT) / (double)(1295105167 - 1294035011) );
+        System.out.println((double)(DifficultyAdjustmentRedux.TARGET_BLOCK_TIME * DifficultyAdjustmentRedux.RECALCULATE_HEIGHT) / (double)(current - 1294035011) );
         System.out.println();
 
         System.out.println("OLD COMPACT, NEW COMPACT");

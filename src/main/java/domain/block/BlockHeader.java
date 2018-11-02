@@ -10,15 +10,14 @@ public class BlockHeader implements Serializable {
     public byte[] prevBlockHash;
     public byte[] merkleRoot;
     public long time = 0; // Wtf 8 bytes? Yes, 4 bytes is outdated and will not work after January 19, 2038. wtf were you thinking satoshi nakamoto?
-    public byte[] difficultyBits; // Not to be confused with difficulty = genesis_target / current_target
     public long bits; // Just to test
     private long nonce = 0;
 
-    public BlockHeader(int version, byte[] prevBlockHash, byte[] merkleRoot, byte[] difficultyBits) {
+    public BlockHeader(int version, byte[] prevBlockHash, byte[] merkleRoot, long bits) {
         this.version = version;
         this.prevBlockHash = prevBlockHash;
         this.merkleRoot = merkleRoot;
-        this.difficultyBits = difficultyBits;
+        this.bits = bits;
     }
 
     /**
@@ -27,12 +26,11 @@ public class BlockHeader implements Serializable {
      * @return
      */
     public ByteBuffer serialize() {
-        ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES + 32 + 32 + Long.BYTES + 64 + Long.BYTES + Long.BYTES);
+        ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES + 32 + 32 + Long.BYTES + Long.BYTES + Long.BYTES);
         bb.putInt(version);
         bb.put(prevBlockHash);
         bb.put(merkleRoot);
         bb.putLong(time);
-        bb.put(difficultyBits);
         bb.putLong(bits);
 
         return bb;

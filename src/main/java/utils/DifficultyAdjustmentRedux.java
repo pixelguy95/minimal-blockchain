@@ -12,22 +12,24 @@ public class DifficultyAdjustmentRedux {
     public static final int TARGET_BLOCK_TIME = 600;
     public static final int RECALCULATE_HEIGHT = 2016;
 
-    public static long getNextBlockBits(Blockchain bchain, long currentTime){
+    public static long getNextBlockBits(Blockchain bchain){
 
-        Block b = bchain.getTopBlock();
+        Block top = bchain.getTopBlock();
 
-        if((bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).height + 1)  % RECALCULATE_HEIGHT != 0 ){
-            return b.header.bits;
+        if((bchain.getChain().get(ByteBuffer.wrap(top.header.getHash())).height + 1)  % RECALCULATE_HEIGHT != 0 ){
+            return top.header.bits;
         }
 
-        long bcheight = bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).height + 1;
-        long bits = bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).blockHeader.bits;
+        long bcheight = bchain.getChain().get(ByteBuffer.wrap(top.header.getHash())).height + 1;
+        long bits = bchain.getChain().get(ByteBuffer.wrap(top.header.getHash())).blockHeader.bits;
 
-        b = bchain.getBlock(b.header.prevBlockHash);
+        Block b = bchain.getBlock(top.header.prevBlockHash);
 
         while(b != null) {
             if(bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).height == bcheight - RECALCULATE_HEIGHT){
-                return calculateTarget(currentTime, bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).blockHeader.time, bits);
+                System.out.println(top.header.time);
+                System.out.println(bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).blockHeader.time);
+                return calculateTarget(top.header.time, bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).blockHeader.time, bits);
             }
 
             b = bchain.getBlock(b.header.prevBlockHash);
