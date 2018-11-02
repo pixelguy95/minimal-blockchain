@@ -104,6 +104,10 @@ public class DifficultyAdjustmentReduxTest {
         System.out.println(DifficultyAdjustmentRedux.toTarget(newBits).toString(16));
         System.out.println();
 
+        System.out.println("JJ Target");
+        System.out.println(DifficultyAdjustmentRedux.toTarget(0x1b0404cb).multiply(BigInteger.valueOf(53)).toString(16));
+        System.out.println();
+
         System.out.println("OLD TARGET / NEW TARGET");
         System.out.println(new BigDecimal(DifficultyAdjustmentRedux.toTarget(0x1b0404cb))
                 .divide(new BigDecimal(DifficultyAdjustmentRedux.toTarget(newBits)), 16, RoundingMode.HALF_EVEN).toString());

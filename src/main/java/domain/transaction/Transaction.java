@@ -1,6 +1,7 @@
 package domain.transaction;
 
 import apis.static_structures.Blockchain;
+import apis.static_structures.UTXO;
 import domain.Validatable;
 import domain.utxo.UTXOIdentifier;
 import io.nayuki.bitcoin.crypto.Base58Check;
@@ -140,6 +141,21 @@ public class Transaction implements Serializable, Validatable {
 
     public boolean equals(Object o) {
         return ByteBuffer.wrap(serialize()).equals(ByteBuffer.wrap(((Transaction)o).serialize()));
+    }
+
+    public long getFee(UTXO utxo) {
+
+        long in = 0;
+        for(Input i : inputs) {
+            in += utxo.get(new UTXOIdentifier(i.transactionHash, i.outputIndex)).amount;
+        }
+
+        long out = 0;
+        for(Output o : outputs) {
+            out += o.amount;
+        }
+
+        return in - out;
     }
 
     /**

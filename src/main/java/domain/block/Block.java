@@ -7,9 +7,11 @@ import domain.transaction.Transaction;
 import org.apache.commons.codec.digest.DigestUtils;
 import script.ScriptBuilder;
 import security.ECKeyManager;
+import utils.DifficultyAdjustmentRedux;
 import utils.MerkleTreeUtils;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.PublicKey;
 import java.util.Arrays;
@@ -18,12 +20,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Block implements Serializable , Validatable {
+
+    public static final long INITIAL_REWARD = 5000000 * 1000;
+
     public int blockSize;
     public BlockHeader header;
     public long transactionCounter;
     public List<Transaction> transactions;
     public CoinbaseTransaction coinbase;
 
+    @Deprecated
     public Block(List<Transaction> transactions, byte[] prevBlockHash, PublicKey pub) {
         this.transactions = transactions;
         this.transactionCounter = transactions.size();
@@ -31,7 +37,15 @@ public class Block implements Serializable , Validatable {
         generateCoinBaseTransaction(pub);
         byte[] merkeleTreeRoot = generateMerkeleRoot();
 
-        header = new BlockHeader(1, prevBlockHash, merkeleTreeRoot, new byte[4]);
+        header = new BlockHeader(1, prevBlockHash, merkeleTreeRoot, 0);
+    }
+
+    public Block(int blockSize, BlockHeader header, long transactionCounter, List<Transaction> transactions, CoinbaseTransaction coinbase) {
+        this.blockSize = blockSize;
+        this.header = header;
+        this.transactionCounter = transactionCounter;
+        this.transactions = transactions;
+        this.coinbase = coinbase;
     }
 
     /**

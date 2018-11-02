@@ -26,7 +26,7 @@ public class BlockHeader implements Serializable {
      * @return
      */
     public ByteBuffer serialize() {
-        ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES + 32 + 32 + Long.BYTES + Long.BYTES + Long.BYTES);
+        ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES + 32 + 100 + Long.BYTES + Long.BYTES + Long.BYTES);
         bb.putInt(version);
         bb.put(prevBlockHash);
         bb.put(merkleRoot);
