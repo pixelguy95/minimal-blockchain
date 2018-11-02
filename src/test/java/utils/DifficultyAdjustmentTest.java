@@ -7,6 +7,7 @@ import db.DBHolder;
 import domain.block.Block;
 import domain.block.BlockHeader;
 import node.Config;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import security.ECKeyManager;
@@ -41,6 +42,9 @@ public class DifficultyAdjustmentTest {
                         DifficultyAdjustment.toCompactFormat(new BigInteger("22829202948393929850749706076701368331072452018388575715328"))));
     }
 
+    // why not:
+    // new BigInteger(s, 16).toByteArray();
+    // ?
     public static byte[] hexStringToByteArray(String s) {
         int len = s.length();
         byte[] data = new byte[len / 2];
@@ -93,15 +97,21 @@ public class DifficultyAdjustmentTest {
         dbs.destroy(config.dbFolder);
         dbs.restart(config.dbFolder);
 
-        Blockchain blockchain = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config);
-
         KeyPair pair = ECKeyManager.generateNewKeyPair();
 
+        Block genesis = new Block(new ArrayList<>(), DigestUtils.sha256("NO PREVIOUS BLOCK".getBytes()), pair.getPublic());
+        genesis.header.time = 1294035011;
+        Blockchain blockchain = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config, genesis);
+
+
+        long diff = 1294035011 - 1295105167;
+        long current = 1294035011 + diff;
         assert pair != null;
-        for(int i = 0; i < 2014; i++){
+        for(int i = 0; i < 2015; i++){
             Block b = new Block(new ArrayList<>(), blockchain.getTopBlock().header.getHash(), pair.getPublic());
             b.header.difficultyBits = hexStringToByteArray("1b0404cb");
-            b.header.time = 1294035011;
+            b.header.time = current;
+            current+=diff;
             blockchain.addBlock(b);
         }
 

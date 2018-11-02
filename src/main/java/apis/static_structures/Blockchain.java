@@ -69,6 +69,55 @@ public class Blockchain {
         }
     }
 
+    /**
+     * This constructor is for testing purposes only. Here you have the chance to provide your own genesisblock
+     * @param blockDB
+     * @param blockHeaderDB
+     * @param metaDB
+     * @param config
+     * @param customGenesisBlock
+     */
+    public Blockchain(DB blockDB, DB blockHeaderDB, DB metaDB, Config config, Block customGenesisBlock) {
+
+        this.blockDB = blockDB;
+        this.blockHeaderDB = blockHeaderDB;
+        this.metaDB = metaDB;
+        this.config = config;
+
+        HashMap<ByteBuffer, StoredBlock> chain = new HashMap<>();
+        HashMap<ByteBuffer, StoredBlock> leafs = new HashMap<>();
+
+        try {
+            DBIterator iterator = blockHeaderDB.iterator();
+            for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
+                byte[] key = iterator.peekNext().getKey();
+                StoredBlock sb = (StoredBlock) SerializationUtils.deserialize(iterator.peekNext().getValue());
+                chain.put(ByteBuffer.wrap(key), sb);
+            }
+            iterator.close();
+
+            byte[] leafBytes = metaDB.get("leafkey".getBytes());
+            if (leafBytes != null && leafBytes.length != 0) {
+                leafs = deserilizeLeafs(leafBytes);
+            } else {
+                leafs = new HashMap<>();
+            }
+
+            genesisBlockHash = metaDB.get("genesisblockhash".getBytes());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        this.chain = chain;
+        this.leafs = leafs;
+        this.orphans = new HashMap<>();
+
+        if(chain.size() == 0) {
+            addBlock(customGenesisBlock);
+        }
+    }
+
     public synchronized void addBlock(Block block) {
         byte[] newHash = block.header.getHash();
         if (leafs.containsKey(ByteBuffer.wrap(block.header.prevBlockHash))) {

@@ -102,11 +102,11 @@ public class DifficultyAdjustment {
 
         Block b = bchain.getTopBlock();
 
-        if(bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).height + 1  % 2016 != 0 ){
+        if((bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).height + 1)  % 2016 != 0 ){
             return b.header.difficultyBits;
         }
 
-        long bcheight = bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).height;
+        long bcheight = bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).height + 1;
         byte[] difficultyBits = b.header.difficultyBits;
 
         b = bchain.getBlock(b.header.prevBlockHash);
@@ -115,6 +115,7 @@ public class DifficultyAdjustment {
             if(bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).height == bcheight - 2016){
                 return toCompactFormat(calculateTarget(difficultyBits).multiply(BigInteger.valueOf((currentTime - b.header.time))).divide(BigInteger.valueOf(20160)));
             }
+
             b = bchain.getBlock(b.header.prevBlockHash);
         }
         return null;
