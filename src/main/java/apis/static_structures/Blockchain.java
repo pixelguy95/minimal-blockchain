@@ -65,7 +65,7 @@ public class Blockchain {
         this.orphans = new HashMap<>();
 
         if(chain.size() == 0) {
-            addBlock(Block.generateGenesisBlock());
+            addBlock(Block.generateGenesisBlock(this));
         }
     }
 
@@ -318,6 +318,7 @@ public class Blockchain {
             }
         }
 
+        System.out.println(leafs.size());
         return (Block) SerializationUtils.deserialize(blockDB.get(heighestBlock.blockHeader.getHash()));
     }
 

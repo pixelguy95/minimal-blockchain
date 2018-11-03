@@ -47,6 +47,18 @@ public class BlockBuilder {
         return this;
     }
 
+    public BlockBuilder generateCoinBaseWithoutFees(PublicKey pub, long bestHeight) {
+        long reward = Block.INITIAL_REWARD / (long)(Math.pow(2.0, Math.floor(bestHeight / 210_000)));
+        long amount = reward;
+
+        byte[] scriptPubKey = ScriptBuilder.generateP2PKScript(pub);
+        int scriptPubKeyLength = scriptPubKey.length;
+        Output coinbaseOutput = new Output(amount, scriptPubKeyLength, scriptPubKey);
+        this.coinbase = new CoinbaseTransaction(1, (short) 0, coinbaseOutput, null, 0xFFFFFFFF);
+
+        return this;
+    }
+
     public BlockBuilder generateHeader(Blockchain blockchain) {
         List<Transaction> transactionsPlusCoinBase = new ArrayList<>();
         transactionsPlusCoinBase.addAll(transactions);
@@ -71,7 +83,7 @@ public class BlockBuilder {
                 MerkleTreeUtils.getMerkleRootFromSerTxList(transactions.stream().map(t->t.serialize()).collect(Collectors.toList())),
                 DifficultyAdjustmentRedux.getNextBlockBits(blockchain));
 
-        this.header.time = (System.currentTimeMillis() / 1000);
+        this.header.time = 1541216941;
         return this;
     }
 

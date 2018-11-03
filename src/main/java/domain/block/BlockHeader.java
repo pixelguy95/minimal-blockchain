@@ -4,6 +4,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 
 public class BlockHeader implements Serializable {
     public int version;
@@ -37,7 +38,11 @@ public class BlockHeader implements Serializable {
     }
 
     public void incrementNonce() {
-        this.nonce = this.nonce++;
+        this.nonce++;
+    }
+
+    public void rendomizeNonce() {
+        this.nonce = new SecureRandom().nextLong();
     }
 
     public byte[] getHash() {

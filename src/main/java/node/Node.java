@@ -11,6 +11,7 @@ import apis.utils.TransactionValidator;
 import com.google.gson.*;
 import db.DBHolder;
 import node.tasks.BlockSync;
+import node.tasks.Miner;
 import node.tasks.NetworkSetup;
 
 import java.io.IOException;
@@ -46,6 +47,9 @@ public class Node {
     public UTXO utxo;
 
     public Node(String[] args) {
+
+        System.out.println(System.currentTimeMillis() / 1000);
+
         isRunning = new AtomicBoolean(true);
         config = new Config(args);
 
@@ -84,7 +88,14 @@ public class Node {
             }
         }
 
+
         setUpEndPoints(config);
+
+        startTasks();
+    }
+
+    private void startTasks() {
+        new Thread(new Miner(new AtomicBoolean(true), blockchain, transactionPool, utxo)).start();
     }
 
     public void initialNode(Config config) {

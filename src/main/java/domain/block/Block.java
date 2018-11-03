@@ -1,5 +1,6 @@
 package domain.block;
 
+import apis.static_structures.Blockchain;
 import domain.Validatable;
 import domain.transaction.CoinbaseTransaction;
 import domain.transaction.Output;
@@ -82,8 +83,14 @@ public class Block implements Serializable , Validatable {
                 this.coinbase.equals(otherBlock.coinbase);
     }
 
-    public static Block generateGenesisBlock() {
+    public static Block generateGenesisBlock(Blockchain blockchain) {
         PublicKey pub = ECKeyManager.bytesToPublicKey(Base64.getUrlDecoder().decode("MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAECibpSuVLXUv-dNRPpDJ7H416s8g0e3uqGMkTL23OOMewtkeOPH8GgByAu7-acla3bmORGH5GadbUEjBk9YE79A"));
-        return new Block(Arrays.asList(), DigestUtils.sha256("GENESIS BLOCK"), pub);
+
+        Block genesis = new BlockBuilder()
+                .putTransactions(Arrays.asList())
+                .generateCoinBaseWithoutFees(pub, 0)
+                .generateHeaderWithGivenPrevBlock(blockchain, DigestUtils.sha256("GENESIS BLOCK")).end();
+
+        return genesis;
     }
 }

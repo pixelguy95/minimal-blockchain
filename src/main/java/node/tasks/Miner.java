@@ -1,59 +1,113 @@
 package node.tasks;
 
+import apis.domain.Host;
+import apis.static_structures.Blockchain;
+import apis.static_structures.TransactionPool;
+import apis.static_structures.UTXO;
+import apis.utils.BlockRESTWrapper;
+import domain.block.Block;
+import domain.block.BlockBuilder;
 import domain.block.BlockHeader;
+import security.ECKeyManager;
 import utils.DifficultyAdjustment;
+import utils.DifficultyAdjustmentRedux;
 
 import java.math.BigInteger;
 
+import java.nio.ByteBuffer;
+import java.security.KeyPair;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Miner extends AbstractTask {
-    public Miner(AtomicBoolean keepAlive) {
+
+    private Blockchain blockchain;
+    private TransactionPool transactionPool;
+    private UTXO utxo;
+
+    public Miner(AtomicBoolean keepAlive, Blockchain blockchain, TransactionPool transactionPool, UTXO utxo) {
         super(keepAlive);
+        this.blockchain = blockchain;
+        this.transactionPool = transactionPool;
+        this.utxo = utxo;
     }
 
     @Override
     public void run() {
-        while(true) {
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+
+        AtomicBoolean keepLooking = new AtomicBoolean(true);
+        AtomicBoolean cancelWatch = new AtomicBoolean(false);
+
+        new Thread(() -> {
+            long height = blockchain.getBestHeight();
+            while(keepAlive.get()) {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                if(cancelWatch.get()) {
+                    height = blockchain.getBestHeight();
+                    cancelWatch.set(false);
+                    continue;
+                }
+
+                if(height!=blockchain.getBestHeight()) {
+                    keepLooking.set(false);
+                    height=blockchain.getBestHeight();
+                }
             }
+        }).start();
+
+        System.out.println("Start of mining");
+        while(keepAlive.get()) {
+
+            KeyPair pair = ECKeyManager.generateNewKeyPair();
+            keepLooking.set(true);
+
+            //TODO generate a valid next block
+            Block candidate = new BlockBuilder().putTransactions(Arrays.asList()).generateCoinBase(pair.getPublic(), blockchain.getBestHeight(), utxo).generateHeader(blockchain).end();
+
+            long start = System.currentTimeMillis();
+            boolean iMined = mineBlock(candidate, keepLooking, cancelWatch);
+            System.out.println("TIME " + ((double)(System.currentTimeMillis() - start) / 1000.0));
+            System.out.println("CHAIN SIZE: " + blockchain.getChain().size());
+
+            if(iMined)
+                BlockRESTWrapper.newBlock(new Host("localhost", 30109), candidate);
+
         }
     }
 
-//    protected void mineBlock()  {
-//
-//        // Blockheader should not be created here but...
-//
-//        // "1d00ffff" is the difficulty bits Satoshi chose back in the day
-//        BlockHeader bh = new BlockHeader(1, new byte[4], new byte[4], hexStringToByteArray("1d00ffff"));
-//
-//        BigInteger target = DifficultyAdjustment.calculateTarget(bh.difficultyBits);
-//
-//        while( (new BigInteger(bh.getHash()).compareTo(target)) < 0){
-//            bh.incrementNonce();
-//        }
-//        System.out.println("BLOCK SUCCESSFULLY MINED WITH HASH: " + new String(bh.getHash()));
-//    }
+    protected boolean mineBlock(Block candidate, AtomicBoolean keepLooking, AtomicBoolean cancelWatch)  {
+        BlockHeader header = candidate.header;
+        BigInteger target = DifficultyAdjustmentRedux.toTarget(header.bits);
 
-//    public static void main(){
-//        Miner m = new Miner(new AtomicBoolean(true));
-//
-//        m.mineBlock();
-//
-//    }
+        header.rendomizeNonce(); //So that all nodes doesn't start from the same nonce
 
-    // GARBAGE THROW AWAY OR MOVE TO GENESIS BLOCK CREATION
-    public static byte[] hexStringToByteArray(String s) {
-        int len = s.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i+1), 16));
+        int searched = 0;
+        while(keepLooking.get()){
+            searched++;
+
+            byte[] hash = header.getHash();
+            if(new BigInteger(ByteBuffer.allocate(1+hash.length).put((byte) 0x00).put(hash).array()).compareTo(target) < 0) {
+                break;
+            }
+
+            header.incrementNonce();
         }
-        return data;
-    }
 
+        if(keepLooking.get()) {
+            cancelWatch.set(true);
+            System.out.println("BLOCK SUCCESSFULLY MINED WITH HASH");
+            System.out.println(searched);
+            System.out.println(new BigInteger(header.getHash()).toString(16));
+            System.out.println(target.toString(16));
+            System.out.println(keepLooking.get());
+            return true;
+        }
+
+        return false;
+    }
 }

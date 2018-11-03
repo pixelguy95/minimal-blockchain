@@ -9,10 +9,14 @@ import java.nio.ByteBuffer;
 
 public class DifficultyAdjustmentRedux {
 
-    public static final int TARGET_BLOCK_TIME = 600;
-    public static final int RECALCULATE_HEIGHT = 2016;
+    public static final int TARGET_BLOCK_TIME = 60;
+    public static final int RECALCULATE_HEIGHT = 30;
 
     public static long getNextBlockBits(Blockchain bchain){
+
+        if(bchain.getChain().size() == 0) {
+            return 0x1f000bff;
+        }
 
         Block top = bchain.getTopBlock();
 
