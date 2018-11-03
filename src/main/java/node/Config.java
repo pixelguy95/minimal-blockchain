@@ -3,12 +3,16 @@ package node;
 import apis.domain.Host;
 import apis.domain.requests.HandshakeRequest;
 import org.apache.commons.cli.*;
+import security.ECKeyManager;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,6 +33,9 @@ public class Config {
     public boolean allowOrphanBlocks = true;
     public boolean verifyNewBlocks = true;
     public boolean verifyTransactions = true;
+
+    public boolean isMiningNode = true;
+    public PublicKey miningPublicKey;
 
     public int safeBlockLength = 4;
 
@@ -72,6 +79,24 @@ public class Config {
                 port = Integer.parseInt(line.getOptionValue("p"));
             }
 
+            if(line.hasOption("mp")) {
+                miningPublicKey = ECKeyManager.loadPairFromFile(line.getOptionValue("mp")).getPublic();
+            } else {
+                File keyFile = new File(".mining.key");
+
+                if(keyFile.isFile() && keyFile.exists()) {
+                    miningPublicKey = ECKeyManager.loadPairFromFile(".mining.key").getPublic();
+                } else {
+                    KeyPair miningKeyPair = ECKeyManager.generateNewKeyPair();
+                    ECKeyManager.writePairToFile(miningKeyPair, ".mining.key");
+
+                    miningPublicKey = miningKeyPair.getPublic();
+                }
+            }
+
+            if(line.hasOption("nm")) {
+                isMiningNode = false;
+            }
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -95,6 +120,10 @@ public class Config {
 
         options.addOption( "f", "db-folder", true, "the folder used for persistence, " +
                 "will default to .local-persistence");
+
+        options.addOption( "nm", "no-mining", false, "set if you don't want this node to mine. inital nodes will override this");
+
+        options.addOption( "mp", "mining-pub", true, "the mining key you want to use, give as a key file path");
 
         return options;
     }

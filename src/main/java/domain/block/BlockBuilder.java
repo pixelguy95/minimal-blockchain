@@ -62,7 +62,7 @@ public class BlockBuilder {
     public BlockBuilder generateHeader(Blockchain blockchain) {
         List<Transaction> transactionsPlusCoinBase = new ArrayList<>();
         transactionsPlusCoinBase.addAll(transactions);
-        transactions.add(coinbase);
+        transactionsPlusCoinBase.add(coinbase);
 
         this.header = new BlockHeader(1,
                 blockchain.getTopBlock().header.getHash(),
@@ -83,7 +83,7 @@ public class BlockBuilder {
                 MerkleTreeUtils.getMerkleRootFromSerTxList(transactions.stream().map(t->t.serialize()).collect(Collectors.toList())),
                 DifficultyAdjustmentRedux.getNextBlockBits(blockchain));
 
-        this.header.time = 1541216941;
+        this.header.time = 1541279724;
         return this;
     }
 

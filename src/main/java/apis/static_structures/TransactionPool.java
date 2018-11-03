@@ -52,4 +52,20 @@ public class TransactionPool {
 
         return all;
     }
+
+    public synchronized Transaction getOneTransaction() {
+        DBIterator iterator = transactionPoolDB.iterator();
+        iterator.seekToFirst();
+        return Transaction.fromBytes(iterator.peekNext().getValue());
+    }
+
+    public synchronized List<Transaction> getNTransactions(int n) {
+        DBIterator iterator = transactionPoolDB.iterator();
+        iterator.seekToFirst();
+
+        List<Transaction> nTransactions = new ArrayList<>();
+        iterator.forEachRemaining(entry -> nTransactions.add(Transaction.fromBytes(entry.getValue())));
+
+        return nTransactions;
+    }
 }

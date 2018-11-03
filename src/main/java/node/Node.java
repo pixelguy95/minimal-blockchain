@@ -10,14 +10,18 @@ import apis.utils.BlockValidator;
 import apis.utils.TransactionValidator;
 import com.google.gson.*;
 import db.DBHolder;
+import domain.block.Block;
+import io.nayuki.bitcoin.crypto.Ripemd160;
 import node.tasks.BlockSync;
 import node.tasks.Miner;
 import node.tasks.NetworkSetup;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.restlet.resource.ResourceException;
 import spark.Service;
 import utils.RESTUtils;
@@ -49,9 +53,12 @@ public class Node {
     public Node(String[] args) {
 
         System.out.println(System.currentTimeMillis() / 1000);
+        System.out.println(Block.INITIAL_REWARD);
 
         isRunning = new AtomicBoolean(true);
         config = new Config(args);
+
+        System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(Ripemd160.getHash(DigestUtils.sha256(config.miningPublicKey.getEncoded()))));
 
         dbs = new DBHolder(config.dbFolder);
         if(config.isInitial) {
@@ -95,7 +102,11 @@ public class Node {
     }
 
     private void startTasks() {
-        new Thread(new Miner(new AtomicBoolean(true), blockchain, transactionPool, utxo)).start();
+
+        if(config.isMiningNode)
+            new Thread(new Miner(new AtomicBoolean(true), blockchain, transactionPool, utxo, config)).start();
+
+
     }
 
     public void initialNode(Config config) {

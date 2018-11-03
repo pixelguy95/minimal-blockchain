@@ -5,12 +5,13 @@ import domain.block.Block;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 
 public class DifficultyAdjustmentRedux {
 
-    public static final int TARGET_BLOCK_TIME = 60;
-    public static final int RECALCULATE_HEIGHT = 30;
+    public static final int TARGET_BLOCK_TIME = 300;
+    public static final int RECALCULATE_HEIGHT = 10;
 
     public static long getNextBlockBits(Blockchain bchain){
 
@@ -31,8 +32,6 @@ public class DifficultyAdjustmentRedux {
 
         while(b != null) {
             if(bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).height == bcheight - RECALCULATE_HEIGHT){
-                System.out.println(top.header.time);
-                System.out.println(bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).blockHeader.time);
                 return calculateTarget(top.header.time, bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).blockHeader.time, bits);
             }
 
@@ -45,8 +44,11 @@ public class DifficultyAdjustmentRedux {
 
         BigInteger target = toTarget(bits);
         long blockTimeDiff = lastBlockTime - compareBlockTime;
-        double div = (double)(blockTimeDiff) / (double)(TARGET_BLOCK_TIME * RECALCULATE_HEIGHT);
-        BigInteger newTarget = new BigDecimal(target).multiply(new BigDecimal(div)).toBigInteger();
+        double div =  (double)(TARGET_BLOCK_TIME * RECALCULATE_HEIGHT) / (double)(blockTimeDiff);
+        System.out.println("OPTIMAL / CURRENT = " + div);
+        BigInteger newTarget = new BigDecimal(target).divide(new BigDecimal(div), 10, RoundingMode.HALF_EVEN).toBigInteger();
+        System.out.println("====NEW TARGET====");
+        System.out.println(newTarget.toString(16));
 
         return toCompactBits(newTarget);
     }

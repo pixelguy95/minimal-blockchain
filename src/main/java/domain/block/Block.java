@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class Block implements Serializable , Validatable {
 
-    public static final long INITIAL_REWARD = 5000000 * 1000;
+    public static final long INITIAL_REWARD = (long)((long)5000000 * (long)1000);
 
     public int blockSize;
     public BlockHeader header;

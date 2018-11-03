@@ -8,6 +8,8 @@ import apis.utils.BlockRESTWrapper;
 import domain.block.Block;
 import domain.block.BlockBuilder;
 import domain.block.BlockHeader;
+import domain.transaction.Transaction;
+import node.Config;
 import security.ECKeyManager;
 import utils.DifficultyAdjustment;
 import utils.DifficultyAdjustmentRedux;
@@ -17,19 +19,24 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 public class Miner extends AbstractTask {
 
     private Blockchain blockchain;
     private TransactionPool transactionPool;
     private UTXO utxo;
+    private Config config;
 
-    public Miner(AtomicBoolean keepAlive, Blockchain blockchain, TransactionPool transactionPool, UTXO utxo) {
+    public Miner(AtomicBoolean keepAlive, Blockchain blockchain, TransactionPool transactionPool, UTXO utxo, Config config) {
         super(keepAlive);
         this.blockchain = blockchain;
         this.transactionPool = transactionPool;
         this.utxo = utxo;
+        this.config = config;
     }
 
     @Override
@@ -42,7 +49,7 @@ public class Miner extends AbstractTask {
             long height = blockchain.getBestHeight();
             while(keepAlive.get()) {
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -66,8 +73,7 @@ public class Miner extends AbstractTask {
             KeyPair pair = ECKeyManager.generateNewKeyPair();
             keepLooking.set(true);
 
-            //TODO generate a valid next block
-            Block candidate = new BlockBuilder().putTransactions(Arrays.asList()).generateCoinBase(pair.getPublic(), blockchain.getBestHeight(), utxo).generateHeader(blockchain).end();
+            Block candidate = constructCandidate();
 
             long start = System.currentTimeMillis();
             boolean iMined = mineBlock(candidate, keepLooking, cancelWatch);
@@ -75,9 +81,21 @@ public class Miner extends AbstractTask {
             System.out.println("CHAIN SIZE: " + blockchain.getChain().size());
 
             if(iMined)
-                BlockRESTWrapper.newBlock(new Host("localhost", 30109), candidate);
+                BlockRESTWrapper.newBlock(new Host("localhost", config.port), candidate);
 
         }
+    }
+
+    private Block constructCandidate() {
+
+        List<Transaction> hunderedTransactions = transactionPool.getNTransactions(100);
+
+        Block candidate = new BlockBuilder()
+                .putTransactions(hunderedTransactions)
+                .generateCoinBase(config.miningPublicKey, blockchain.getBestHeight(), utxo)
+                .generateHeader(blockchain).end();
+
+        return candidate;
     }
 
     protected boolean mineBlock(Block candidate, AtomicBoolean keepLooking, AtomicBoolean cancelWatch)  {

@@ -60,9 +60,6 @@ public class UTXOAPI {
                 byte[] pubAddressFromScript = new byte[20];
                 script.get(pubAddressFromScript, 0, 20);
 
-                System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(pubAddressFromScript));
-                System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(ripmd160Address));
-
                 if(ByteBuffer.wrap(pubAddressFromScript).equals(ByteBuffer.wrap(ripmd160Address))) {
                     matches.add(output);
                 }
