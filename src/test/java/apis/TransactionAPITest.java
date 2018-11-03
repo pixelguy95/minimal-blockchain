@@ -4,7 +4,6 @@ import apis.domain.Host;
 import apis.utils.BlockRESTWrapper;
 import apis.utils.TransactionValidator;
 import domain.block.Block;
-import domain.block.BlockBuilder;
 import domain.transaction.Transaction;
 import node.Node;
 import org.junit.After;
@@ -13,10 +12,8 @@ import org.junit.Test;
 import security.ECKeyManager;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.util.Arrays;
-import java.util.Base64;
 
 import static org.junit.Assert.*;
 
@@ -48,15 +45,15 @@ public class TransactionAPITest {
 
         KeyPair pair1 = ECKeyManager.generateNewKeyPair();
         Block genesis = node.blockchain.getGenesisBlock();
-        Block block1 = new BlockBuilder().putTransactions(Arrays.asList()).generateCoinBase(pair.getPublic(), 1, node.utxo).generateHeader(node.blockchain).end();
+        Block block1 = new Block.Builder().putTransactions(Arrays.asList()).generateCoinBase(pair.getPublic(), 1, node.utxo).generateHeader(node.blockchain).end();
         BlockRESTWrapper.newBlock(localHost, block1);
-        Block block2 = new BlockBuilder().putTransactions(Arrays.asList()).generateCoinBase(pair1.getPublic(), 2, node.utxo).generateHeader(node.blockchain).end();
+        Block block2 = new Block.Builder().putTransactions(Arrays.asList()).generateCoinBase(pair1.getPublic(), 2, node.utxo).generateHeader(node.blockchain).end();
         BlockRESTWrapper.newBlock(localHost, block2);
-        Block block3 = new BlockBuilder().putTransactions(Arrays.asList()).generateCoinBase(pair.getPublic(), 3, node.utxo).generateHeader(node.blockchain).end();
+        Block block3 = new Block.Builder().putTransactions(Arrays.asList()).generateCoinBase(pair.getPublic(), 3, node.utxo).generateHeader(node.blockchain).end();
         BlockRESTWrapper.newBlock(localHost, block3);
-        Block block4 = new BlockBuilder().putTransactions(Arrays.asList()).generateCoinBase(pair.getPublic(), 4, node.utxo).generateHeader(node.blockchain).end();
+        Block block4 = new Block.Builder().putTransactions(Arrays.asList()).generateCoinBase(pair.getPublic(), 4, node.utxo).generateHeader(node.blockchain).end();
         BlockRESTWrapper.newBlock(localHost, block4);
-        Block block5 = new BlockBuilder().putTransactions(Arrays.asList()).generateCoinBase(pair.getPublic(), 5, node.utxo).generateHeader(node.blockchain).end();
+        Block block5 = new Block.Builder().putTransactions(Arrays.asList()).generateCoinBase(pair.getPublic(), 5, node.utxo).generateHeader(node.blockchain).end();
         BlockRESTWrapper.newBlock(localHost, block5);
 
         TransactionValidator transactionValidator = new TransactionValidator(node.utxo, node.blockchain, node.transactionPool);

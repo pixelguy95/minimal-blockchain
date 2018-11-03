@@ -6,7 +6,6 @@ import apis.static_structures.TransactionPool;
 import apis.static_structures.UTXO;
 import apis.utils.BlockRESTWrapper;
 import domain.block.Block;
-import domain.block.BlockBuilder;
 import domain.block.BlockHeader;
 import domain.transaction.Transaction;
 import node.Config;
@@ -90,7 +89,7 @@ public class Miner extends AbstractTask {
 
         List<Transaction> hunderedTransactions = transactionPool.getNTransactions(100);
 
-        Block candidate = new BlockBuilder()
+        Block candidate = new Block.Builder()
                 .putTransactions(hunderedTransactions)
                 .generateCoinBase(config.miningPublicKey, blockchain.getBestHeight(), utxo)
                 .generateHeader(blockchain).end();

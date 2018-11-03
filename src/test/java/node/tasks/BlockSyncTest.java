@@ -19,10 +19,10 @@ import static org.junit.Assert.*;
 
 public class BlockSyncTest {
 
-    private static final String[] initialNodeArgs = new String[]{"-i", "-p", "13337", "-db", ".local-persistence-test1"};
-    private static final String[] secondNodeArgs = new String[]{"-n", "localhost:13337", "-p", "13338", "-db", ".local-persistence-test2"};
-    private static final String[] thirdNodeArgs = new String[]{"-n", "localhost:13337", "-p", "13339", "-db", ".local-persistence-test3"};
-    private static final String[] fourthNodeArgs = new String[]{"-n", "localhost:13337", "-p", "13340", "-db", ".local-persistence-test4"};
+    private static final String[] initialNodeArgs = new String[]{"-i", "-p", "13337", "-db", ".local-persistence-test1", "-nm"};
+    private static final String[] secondNodeArgs = new String[]{"-n", "localhost:13337", "-p", "13338", "-db", ".local-persistence-test2", "-nm"};
+    private static final String[] thirdNodeArgs = new String[]{"-n", "localhost:13337", "-p", "13339", "-db", ".local-persistence-test3", "-nm"};
+    private static final String[] fourthNodeArgs = new String[]{"-n", "localhost:13337", "-p", "13340", "-db", ".local-persistence-test4", "-nm"};
 
     private Node node1;
     private Node node2;

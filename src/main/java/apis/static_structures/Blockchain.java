@@ -303,6 +303,13 @@ public class Blockchain {
         return null;
     }
 
+    /**
+     * Returns the leaf with highest height
+     *
+     * This method is a bit of a problem, it will return only one even though there can be more than one top block.
+     *
+     * @return
+     */
     public Block getTopBlock() {
 
         if(leafs.size()==1) {
@@ -318,7 +325,6 @@ public class Blockchain {
             }
         }
 
-        System.out.println(leafs.size());
         return (Block) SerializationUtils.deserialize(blockDB.get(heighestBlock.blockHeader.getHash()));
     }
 
