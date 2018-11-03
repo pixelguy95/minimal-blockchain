@@ -32,7 +32,6 @@ public class BlockchainTest {
         config = new Config(new String[]{});
         config.allowOrphanBlocks = true;
         bc = new Blockchain(dbs.getBlockDB(), dbs.getBlockHeaderDB(), dbs.getMetaDB(), config);
-        bc.addBlock(Block.generateGenesisBlock());
         pub = ECKeyManager.generateNewKeyPair().getPublic();
     }
 

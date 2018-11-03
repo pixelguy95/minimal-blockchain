@@ -102,11 +102,8 @@ public class Node {
     }
 
     private void startTasks() {
-
         if(config.isMiningNode)
             new Thread(new Miner(new AtomicBoolean(true), blockchain, transactionPool, utxo, config)).start();
-
-
     }
 
     public void initialNode(Config config) {

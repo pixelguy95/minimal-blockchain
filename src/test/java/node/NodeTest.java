@@ -34,11 +34,11 @@ import static org.junit.Assert.*;
  */
 public class NodeTest {
 
-    private static final String[] initialNodeArgs = new String[]{"-i", "-p", "13337", "-db", ".local-persistence-test1"};
-    private static final String[] secondNodeArgs = new String[]{"-n", "localhost:13337", "-p", "13338", "-db", ".local-persistence-test2"};
-    private static final String[] thirdNodeArgs = new String[]{"-n", "localhost:13338", "-p", "13339", "-db", ".local-persistence-test3"};
-    private static final String[] fourthNodeArgs = new String[]{"-n", "localhost:13338", "-p", "13340", "-db", ".local-persistence-test4"};
-    private static final String[] lonelyNode = new String[]{"-n", "localhost:13338", "-p", "13341", "-db", ".local-persistence-test5"};
+    private static final String[] initialNodeArgs = new String[]{"-i", "-p", "13337", "-db", ".local-persistence-test1", "-nm"};
+    private static final String[] secondNodeArgs = new String[]{"-n", "localhost:13337", "-p", "13338", "-db", ".local-persistence-test2", "-nm"};
+    private static final String[] thirdNodeArgs = new String[]{"-n", "localhost:13338", "-p", "13339", "-db", ".local-persistence-test3", "-nm"};
+    private static final String[] fourthNodeArgs = new String[]{"-n", "localhost:13338", "-p", "13340", "-db", ".local-persistence-test4", "-nm"};
+    private static final String[] lonelyNode = new String[]{"-n", "localhost:13338", "-p", "13341", "-db", ".local-persistence-test5", "-nm"};
 
 
     private Node node1;
@@ -160,7 +160,7 @@ public class NodeTest {
     @Test
     public void blockRetransmission() throws InterruptedException {
 
-        Block genesis = Block.generateGenesisBlock();
+        Block genesis = Block.generateGenesisBlock(node1.blockchain);
         Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), pair.getPublic());
 
         BlockRESTWrapper.newBlock(new Host(node1.config.outwardIP, node1.config.port), block1);

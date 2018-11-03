@@ -31,7 +31,7 @@ import static org.junit.Assert.*;
 
 public class BlockAPITest {
 
-    private static final String[] initialNodeArgs = new String[]{"-i", "-p", "13337", "-db", ".local-persistence-test1"};
+    private static final String[] initialNodeArgs = new String[]{"-i", "-p", "13337", "-db", ".local-persistence-test1", "-nm"};
     public Node node;
 
     public Host localHost = new Host("localhost:13337");
@@ -177,9 +177,6 @@ public class BlockAPITest {
 
         KeyPair genesisPair = ECKeyManager.loadPairFromFile(".genesis.key.pair");
         assertTrue(node.utxo.getAllByPublicKey(genesisPair.getPublic()).size() == 1);
-        System.out.println(node.utxo.getAllByPublicKey(genesisPair.getPublic()).get(0).outputIndex);
-        System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(node.utxo.getAllByPublicKey(genesisPair.getPublic()).get(0).txid));
-        System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(genesis.coinbase.fullHash()));
 
         Transaction spendingGenesisCoinbase = Transaction.makeTransactionFromOutputs(node.blockchain, genesisPair, node.utxo.getAllByPublicKey(genesisPair.getPublic()), pair1.getPublic(), 10);
         assertTrue(spendingGenesisCoinbase != null);
@@ -194,10 +191,10 @@ public class BlockAPITest {
 
         Block block6alt = new Block(Arrays.asList(spendingBlock1Coinbase), block5.header.getHash(), pair.getPublic());
         BlockRESTWrapper.newBlock(localHost, block6alt);
-        Thread.sleep(70);
+        Thread.sleep(500);
 
-        assertTrue(node.utxo.getAll().size() == 2);
-        assertTrue(node.utxo.busy.size() == 2);
+        assertEquals(2, node.utxo.busy.size()); //The two transactions we made
+        assertEquals(3, node.utxo.getAll().size()); //coinbases from genesis, block1, block2
 
         Block block7 = new Block(Arrays.asList(), block6.header.getHash(), pair.getPublic());
         Block block8 = new Block(Arrays.asList(), block7.header.getHash(), pair.getPublic());

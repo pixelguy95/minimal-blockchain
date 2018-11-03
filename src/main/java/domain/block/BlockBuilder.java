@@ -76,7 +76,7 @@ public class BlockBuilder {
     public BlockBuilder generateHeaderWithGivenPrevBlock(Blockchain blockchain, byte[] prevBlockHash) {
         List<Transaction> transactionsPlusCoinBase = new ArrayList<>();
         transactionsPlusCoinBase.addAll(transactions);
-        transactions.add(coinbase);
+        transactionsPlusCoinBase.add(coinbase);
 
         this.header = new BlockHeader(1,
                 prevBlockHash,

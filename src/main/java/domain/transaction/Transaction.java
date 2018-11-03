@@ -194,6 +194,11 @@ public class Transaction implements Serializable, Validatable {
 
         List<Output> all = new ArrayList<>();
         for(int i = 0; i < refTransactions.size(); i++) {
+
+            System.out.println(refTransactions.get(refTransactions.size()-1).outputs.size());
+            System.out.println(refTransactions.get(i).outputs.size());
+            System.out.println(outputIDs.get(i).outputIndex);
+
             all.add(refTransactions.get(i).outputs.get(outputIDs.get(i).outputIndex));
         }
 
