@@ -1,28 +1,20 @@
 package apis;
 
 import apis.domain.Host;
-import apis.domain.requests.NewBlockFoundRequest;
-import apis.domain.requests.NewTransactionRequest;
-import apis.domain.responses.BlockHeightResponse;
 import apis.domain.responses.BooleanResponse;
-import apis.domain.responses.GetBlockResponse;
-import apis.domain.responses.NewTransactionResponse;
-import apis.utils.BlockRESTWrapper;
+import apis.utils.wrappers.BlockRESTWrapper;
 import domain.block.Block;
 import domain.transaction.Transaction;
 import node.Node;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import security.ECKeyManager;
-import utils.RESTUtils;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
-import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -43,7 +35,7 @@ public class BlockAPITest {
         pair = ECKeyManager.generateNewKeyPair();
 
         node = new Node(initialNodeArgs);
-        node.config.verifyNewBlocks = false;
+        node.config.validateNewBlocks = false;
         Thread.sleep(100);
     }
 

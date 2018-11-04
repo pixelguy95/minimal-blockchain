@@ -1,10 +1,7 @@
 package garbage;
 
 import apis.domain.Host;
-import apis.domain.requests.HandshakeRequest;
-import apis.domain.requests.NewTransactionRequest;
-import apis.domain.responses.HandshakeResponse;
-import apis.utils.TransactionRESTWrapper;
+import apis.utils.wrappers.TransactionRESTWrapper;
 import domain.transaction.Input;
 import domain.transaction.Output;
 import domain.transaction.Transaction;
@@ -13,7 +10,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import script.ScriptBuilder;
 import security.ECKeyManager;
 import security.ECSignatureUtils;
-import utils.RESTUtils;
 
 import java.io.IOException;
 import java.security.KeyPair;

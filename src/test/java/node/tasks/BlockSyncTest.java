@@ -1,8 +1,7 @@
 package node.tasks;
 
 import apis.domain.Host;
-import apis.domain.responses.BooleanResponse;
-import apis.utils.BlockRESTWrapper;
+import apis.utils.wrappers.BlockRESTWrapper;
 import domain.block.Block;
 import domain.transaction.Transaction;
 import node.Node;
@@ -40,17 +39,17 @@ public class BlockSyncTest {
 
         System.out.println("NODE 1");
         node1 = new Node(initialNodeArgs);
-        node1.config.verifyNewBlocks = false;
+        node1.config.validateNewBlocks = false;
         Thread.sleep(200);
 
         System.out.println("NODE 2");
         node2 = new Node(secondNodeArgs);
-        node2.config.verifyNewBlocks = false;
+        node2.config.validateNewBlocks = false;
         Thread.sleep(200);
 
         System.out.println("NODE 3");
         node3 = new Node(thirdNodeArgs);
-        node3.config.verifyNewBlocks = false;
+        node3.config.validateNewBlocks = false;
         Thread.sleep(200);
 
     }
@@ -95,7 +94,7 @@ public class BlockSyncTest {
 
         System.out.println("NODE 4");
         node4 = new Node(fourthNodeArgs);
-        node4.config.verifyNewBlocks = false;
+        node4.config.validateNewBlocks = false;
         Thread.sleep(200);
 
         assertEquals(node4.blockchain.getChain().size(), 10);

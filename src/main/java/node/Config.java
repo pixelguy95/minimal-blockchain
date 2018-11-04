@@ -30,9 +30,12 @@ public class Config {
 
     public String outwardIP;
     public Host initialConnection;
+
     public boolean allowOrphanBlocks = true;
-    public boolean verifyNewBlocks = true;
-    public boolean verifyTransactions = true;
+    public boolean validateNewBlocks = true;
+    public boolean validateBlockTarget = true;
+
+    public boolean validateNewTransactions = true;
 
     public boolean isMiningNode = true;
     public PublicKey miningPublicKey;

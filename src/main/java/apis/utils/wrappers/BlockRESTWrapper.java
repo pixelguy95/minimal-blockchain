@@ -1,4 +1,4 @@
-package apis.utils;
+package apis.utils.wrappers;
 
 import apis.domain.Host;
 import apis.domain.requests.NewBlockFoundRequest;

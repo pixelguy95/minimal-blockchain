@@ -1,29 +1,20 @@
 package apis;
 
 import apis.domain.Host;
-import apis.domain.responses.BooleanResponse;
 import apis.domain.responses.GetOutputByAddressResponse;
 import apis.domain.responses.GetOutputResponse;
-import apis.utils.BlockRESTWrapper;
-import apis.utils.UTXORESTWrapper;
+import apis.utils.wrappers.BlockRESTWrapper;
+import apis.utils.wrappers.UTXORESTWrapper;
 import domain.block.Block;
-import domain.transaction.Output;
 import domain.utxo.UTXOIdentifier;
-import io.nayuki.bitcoin.crypto.Ripemd160;
 import node.Node;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import script.ScriptBuilder;
 import security.ECKeyManager;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.Base64;
 
 import static org.junit.Assert.*;
 
@@ -39,7 +30,7 @@ public class UTXOAPITest {
         pub = ECKeyManager.generateNewKeyPair().getPublic();
 
         node = new Node(initialNodeArgs);
-        node.config.verifyNewBlocks = false;
+        node.config.validateNewBlocks = false;
         Thread.sleep(100);
     }
 

@@ -170,7 +170,7 @@ public class Block implements Serializable , Validatable {
                     MerkleTreeUtils.getMerkleRootFromSerTxList(transactions.stream().map(t->t.serialize()).collect(Collectors.toList())),
                     DifficultyAdjustmentRedux.getNextBlockBits(blockchain));
 
-            this.header.time = 1541279724;
+            this.header.time = 1541362453;
             return this;
         }
 

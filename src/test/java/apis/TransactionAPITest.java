@@ -1,8 +1,8 @@
 package apis;
 
 import apis.domain.Host;
-import apis.utils.BlockRESTWrapper;
-import apis.utils.TransactionValidator;
+import apis.utils.wrappers.BlockRESTWrapper;
+import apis.utils.validators.TransactionValidator;
 import domain.block.Block;
 import domain.transaction.Transaction;
 import node.Node;
@@ -29,7 +29,7 @@ public class TransactionAPITest {
         pair = ECKeyManager.generateNewKeyPair();
 
         node = new Node(initialNodeArgs);
-        node.config.verifyNewBlocks = false;
+        node.config.validateNewBlocks = false;
         Thread.sleep(100);
     }
 

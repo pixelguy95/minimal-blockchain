@@ -1,8 +1,8 @@
 package node;
 
 import apis.domain.Host;
-import apis.utils.BlockRESTWrapper;
-import apis.utils.TransactionRESTWrapper;
+import apis.utils.wrappers.BlockRESTWrapper;
+import apis.utils.wrappers.TransactionRESTWrapper;
 import domain.transaction.Input;
 import domain.transaction.Output;
 import domain.transaction.Transaction;
@@ -19,10 +19,8 @@ import security.ECKeyManager;
 import security.ECSignatureUtils;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
-import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.List;
 
@@ -54,16 +52,16 @@ public class NodeTest {
         pair = ECKeyManager.generateNewKeyPair();
 
         node1 = new Node(initialNodeArgs);
-        node1.config.verifyNewBlocks = false;
+        node1.config.validateNewBlocks = false;
         Thread.sleep(200);
         node2 = new Node(secondNodeArgs);
-        node2.config.verifyNewBlocks = false;
+        node2.config.validateNewBlocks = false;
         Thread.sleep(200);
         node3 = new Node(thirdNodeArgs);
-        node3.config.verifyNewBlocks = false;
+        node3.config.validateNewBlocks = false;
         Thread.sleep(200);
         node4 = new Node(fourthNodeArgs);
-        node4.config.verifyNewBlocks = false;
+        node4.config.validateNewBlocks = false;
         Thread.sleep(200);
     }
 
@@ -114,10 +112,10 @@ public class NodeTest {
     @Test
     public void transactionPoolShare() throws InterruptedException {
 
-        node1.config.verifyTransactions = false;
-        node2.config.verifyTransactions = false;
-        node3.config.verifyTransactions = false;
-        node4.config.verifyTransactions = false;
+        node1.config.validateNewTransactions = false;
+        node2.config.validateNewTransactions = false;
+        node3.config.validateNewTransactions = false;
+        node4.config.validateNewTransactions = false;
 
         byte[] fakePartial = DigestUtils.sha256("This will be the partial hash".getBytes());
         byte[] fakeTransactionHash = DigestUtils.sha256("This will be the full hash".getBytes());

@@ -7,6 +7,10 @@ import apis.static_structures.KnownNodesList;
 import apis.static_structures.TransactionPool;
 import apis.static_structures.UTXO;
 import apis.utils.*;
+import apis.utils.validators.BlockValidator;
+import apis.utils.validators.TransactionValidator;
+import apis.utils.validators.Validator;
+import apis.utils.wrappers.BlockRESTWrapper;
 import domain.block.Block;
 import node.Config;
 import org.apache.commons.collections4.ListUtils;
@@ -66,7 +70,7 @@ public class BlockSync {
             for(Block b : blocksInThisPartition) {
                 if(!blockchain.getChain().containsKey(b.header.getHash())) {
 
-                    if(config.verifyNewBlocks) {
+                    if(config.validateNewBlocks) {
                         Validator.Result result = blockValidator.validate(b);
                         if(result.passed) {
                             BlockAddingManager.addBlockAndManageUTXOs(blockchain, utxo, transactionPool, transactionValidator, config, b);

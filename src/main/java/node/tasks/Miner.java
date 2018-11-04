@@ -4,24 +4,20 @@ import apis.domain.Host;
 import apis.static_structures.Blockchain;
 import apis.static_structures.TransactionPool;
 import apis.static_structures.UTXO;
-import apis.utils.BlockRESTWrapper;
+import apis.utils.wrappers.BlockRESTWrapper;
 import domain.block.Block;
 import domain.block.BlockHeader;
 import domain.transaction.Transaction;
 import node.Config;
 import security.ECKeyManager;
-import utils.DifficultyAdjustment;
 import utils.DifficultyAdjustmentRedux;
 
 import java.math.BigInteger;
 
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 public class Miner extends AbstractTask {
 

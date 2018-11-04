@@ -2,21 +2,20 @@ package apis;
 
 import apis.domain.Host;
 import apis.domain.requests.NewBlockFoundRequest;
-import apis.domain.requests.NewTransactionRequest;
 import apis.domain.responses.*;
 import apis.static_structures.Blockchain;
 import apis.static_structures.KnownNodesList;
 import apis.static_structures.TransactionPool;
 import apis.static_structures.UTXO;
 import apis.utils.*;
+import apis.utils.validators.BlockValidator;
+import apis.utils.validators.TransactionValidator;
+import apis.utils.validators.Validator;
+import apis.utils.wrappers.BlockRESTWrapper;
 import domain.block.Block;
 import domain.block.StoredBlock;
-import domain.transaction.Output;
-import domain.transaction.Transaction;
-import domain.utxo.UTXOIdentifier;
 import node.Config;
 import node.SpecialJSONSerializer;
-import org.restlet.resource.ResourceException;
 import spark.Request;
 import spark.Response;
 
@@ -77,7 +76,7 @@ public class BlockAPI {
     public BooleanResponse newBlockFound(Request request, Response response) {
         Block b = SpecialJSONSerializer.getInstance().fromJson(request.body(), NewBlockFoundRequest.class).block;
 
-        if (config.verifyNewBlocks) {
+        if (config.validateNewBlocks) {
 
             Validator.Result result = blockValidator.validate(b);
 
@@ -85,6 +84,7 @@ public class BlockAPI {
                 BlockAddingManager.addBlockAndManageUTXOs(blockchain, utxo, transactionPool, transactionValidator, config, b);
                 retransmitBlockHashToAll(b.header.getHash());
             } else {
+                System.err.println(result.resaon);
                 return (BooleanResponse) new BooleanResponse().setError("Block didn't pass verification: " + result.resaon);
             }
 
@@ -109,16 +109,20 @@ public class BlockAPI {
             GetBlockResponse gbr = BlockRESTWrapper.getBlock(h, blockhash);
 
             if (!gbr.error) {
-                if (config.verifyNewBlocks) {
-                    if (BlockVerifier.verifyBlock(gbr.block)) {
+                if (config.validateNewBlocks) {
+                    Validator.Result result = blockValidator.validate(gbr.block);
+
+                    if(result.passed) {
                         BlockAddingManager.addBlockAndManageUTXOs(blockchain, utxo, transactionPool, transactionValidator, config, gbr.block);
-                        break;
+                        retransmitBlockHashToAll(gbr.block.header.getHash());
                     } else {
-                        return (BooleanResponse) new BooleanResponse().setError("Faulty block received");
+                        System.err.println(result.resaon);
+                        return (BooleanResponse) new BooleanResponse().setError("Block didn't pass verification: " + result.resaon);
                     }
+
                 } else {
                     BlockAddingManager.addBlockAndManageUTXOs(blockchain, utxo, transactionPool, transactionValidator, config, gbr.block);
-                    break;
+                    retransmitBlockHashToAll(gbr.block.header.getHash());
                 }
             }
         }

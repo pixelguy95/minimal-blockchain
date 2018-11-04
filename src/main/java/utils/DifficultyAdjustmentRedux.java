@@ -16,7 +16,7 @@ public class DifficultyAdjustmentRedux {
     public static long getNextBlockBits(Blockchain bchain){
 
         if(bchain.getChain().size() == 0) {
-            return 0x1f000bff;
+            return 0x1f000bff; // The difficulty of the genesis block
         }
 
         Block top = bchain.getTopBlock();
@@ -27,6 +27,43 @@ public class DifficultyAdjustmentRedux {
 
         long bcheight = bchain.getChain().get(ByteBuffer.wrap(top.header.getHash())).height + 1;
         long bits = bchain.getChain().get(ByteBuffer.wrap(top.header.getHash())).blockHeader.bits;
+
+        Block b = bchain.getBlock(top.header.prevBlockHash);
+
+        while(b != null) {
+            if(bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).height == bcheight - RECALCULATE_HEIGHT){
+                return calculateTarget(top.header.time, bchain.getChain().get(ByteBuffer.wrap(b.header.getHash())).blockHeader.time, bits);
+            }
+
+            b = bchain.getBlock(b.header.prevBlockHash);
+        }
+        return -1;
+    }
+
+    /**
+     * Same as above but starts counting from the given block and given height
+     *
+     * Used when validating blocks that have not been added yet
+     *
+     * @param bchain
+     * @param top
+     * @param height
+     * @return
+     */
+    public static long getBlockBits(Blockchain bchain, Block top) {
+
+        if(bchain.getChain().size() == 0) {
+            return 0x1f000bff; // The difficulty of the genesis block
+        }
+
+        long height = bchain.getChain().get(ByteBuffer.wrap(top.header.getHash())).height;
+
+        if((height + 1) % RECALCULATE_HEIGHT != 0 ){
+            return top.header.bits;
+        }
+
+        long bcheight = height + 1;
+        long bits = top.header.bits;
 
         Block b = bchain.getBlock(top.header.prevBlockHash);
 

@@ -7,10 +7,8 @@ import apis.domain.responses.NewTransactionResponse;
 import apis.domain.responses.TransactionRetransmissionResponse;
 import apis.static_structures.KnownNodesList;
 import apis.static_structures.TransactionPool;
-import apis.utils.BlockRESTWrapper;
-import apis.utils.TransactionRESTWrapper;
-import apis.utils.TransactionValidator;
-import apis.utils.TransactionVerifier;
+import apis.utils.wrappers.TransactionRESTWrapper;
+import apis.utils.validators.TransactionValidator;
 import domain.transaction.Transaction;
 import node.Config;
 import node.SpecialJSONSerializer;
@@ -39,7 +37,7 @@ public class TransactionAPI {
     public NewTransactionResponse newTransaction(Request request, Response response) {
         Transaction t = SpecialJSONSerializer.getInstance().fromJson(request.body(), NewTransactionRequest.class).transaction;
 
-        if(config.verifyTransactions) {
+        if(config.validateNewTransactions) {
 
             TransactionValidator.Result res = transactionValidator.validate(t);
             if(res.passed) {
@@ -81,7 +79,7 @@ public class TransactionAPI {
             GetTransactionResponse gtr = TransactionRESTWrapper.getTransaction(h, txid);
 
             if (!gtr.error) {
-                if(config.verifyTransactions) {
+                if(config.validateNewTransactions) {
 
                     TransactionValidator.Result res = transactionValidator.validate(gtr.transaction);
                     if(res.passed) {

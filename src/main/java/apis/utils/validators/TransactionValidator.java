@@ -1,4 +1,4 @@
-package apis.utils;
+package apis.utils.validators;
 
 import apis.static_structures.Blockchain;
 import apis.static_structures.TransactionPool;
@@ -11,7 +11,7 @@ import domain.utxo.UTXOIdentifier;
 import org.apache.commons.lang.ArrayUtils;
 import script.ScriptExecutor;
 
-public class TransactionValidator implements Validator{
+public class TransactionValidator implements Validator {
     private UTXO utxo;
     private Blockchain blockchain;
     private TransactionPool transactionPool;

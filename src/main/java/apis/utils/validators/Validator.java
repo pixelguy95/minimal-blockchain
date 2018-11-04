@@ -1,4 +1,4 @@
-package apis.utils;
+package apis.utils.validators;
 
 import domain.Validatable;
 

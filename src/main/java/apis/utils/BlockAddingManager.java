@@ -3,6 +3,7 @@ package apis.utils;
 import apis.static_structures.Blockchain;
 import apis.static_structures.TransactionPool;
 import apis.static_structures.UTXO;
+import apis.utils.validators.TransactionValidator;
 import domain.block.Block;
 import domain.block.StoredBlock;
 import domain.utxo.UTXOIdentifier;
@@ -42,7 +43,7 @@ public class BlockAddingManager {
                     utxo.makeUnBusy(utxoIdentifier);
                 });
 
-                if(config.verifyTransactions) {
+                if(config.validateNewTransactions) {
                     if(transactionValidator.validate(t).passed) {
                         transactionPool.put(t);
                     }
