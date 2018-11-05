@@ -7,6 +7,7 @@ import apis.domain.responses.NewTransactionResponse;
 import apis.utils.wrappers.TransactionRESTWrapper;
 import apis.utils.wrappers.UTXORESTWrapper;
 import domain.transaction.Transaction;
+import domain.utxo.UTXOIdentifier;
 import io.nayuki.bitcoin.crypto.Ripemd160;
 import org.apache.commons.cli.*;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -55,9 +56,10 @@ public class Wallet {
 
             if(line.hasOption("n")) {
                 ECKeyManager.writePairToFile(ECKeyManager.generateNewKeyPair(), line.getOptionValue("n"));
+                pair = ECKeyManager.loadPairFromFile(line.getOptionValue("n"));
             }
 
-            if(line.hasOption("l")) {
+            if(line.hasOption("l") && !line.hasOption("n")) {
                 pair = ECKeyManager.loadPairFromFile(line.getOptionValue("l"));
             } else {
                 File f = new File(DEFAULT_KEY_FILE);
@@ -92,10 +94,29 @@ public class Wallet {
                 for(Host h : knownHosts) {
                     try {
                         GetOutputIDsByAddressResponse goibar = UTXORESTWrapper.getUTXOIDsByPubKey(h, pair.getPublic());
-                        Transaction t = Transaction.makeTransactionFromOutputs(h, pair, goibar.ids, line.getOptionValues("s")[0], Integer.valueOf(line.getOptionValues("s")[1]));
 
-                        NewTransactionResponse response = TransactionRESTWrapper.sendTransaction(h, t);
-                        System.out.println(response.errorMessage);
+                        List<UTXOIdentifier> ids = goibar.ids;
+                        boolean sent = false;
+                        while(!sent) {
+                            Transaction t = Transaction.makeTransactionFromOutputs(h, pair, ids, line.getOptionValues("s")[0], Long.valueOf(line.getOptionValues("s")[1]));
+
+                            if(t != null && t.inputs != null && t.inputs.size() > 0) {
+                                NewTransactionResponse response = TransactionRESTWrapper.sendTransaction(h, t);
+                                if(!response.error) {
+                                    break;
+                                } else {
+                                    System.out.println(response.errorMessage);
+                                }
+
+                            } else {
+                                System.out.println("No transaction possible");
+                                break;
+                            }
+
+                            ids.remove(0);
+                        }
+
+
                         break;
                     } catch (ResourceException e) {
 

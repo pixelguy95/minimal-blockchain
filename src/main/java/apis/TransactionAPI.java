@@ -41,6 +41,10 @@ public class TransactionAPI {
     public NewTransactionResponse newTransaction(Request request, Response response) {
         Transaction t = SpecialJSONSerializer.getInstance().fromJson(request.body(), NewTransactionRequest.class).transaction;
 
+        if(transactionPool.containsInput(t.inputs)) {
+            return (NewTransactionResponse) new NewTransactionResponse().setError("Transaction didn't pass validation, " + "Transaction pool already has at least one of the inputs");
+        }
+
         if(config.validateNewTransactions) {
 
             TransactionValidator.Result res = transactionValidator.validate(t);

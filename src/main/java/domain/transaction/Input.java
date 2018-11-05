@@ -1,5 +1,7 @@
 package domain.transaction;
 
+import domain.utxo.UTXOIdentifier;
+
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 
@@ -41,5 +43,9 @@ public class Input implements Serializable {
         int sequence = bb.getInt();
 
         return new Input(transactionHash, outputIndex, scriptSigSize, scriptSig, sequence);
+    }
+
+    public UTXOIdentifier toUTXUtxoIdentifier() {
+        return new UTXOIdentifier(transactionHash, outputIndex);
     }
 }

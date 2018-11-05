@@ -96,7 +96,7 @@ public class Miner extends AbstractTask {
         BlockHeader header = candidate.header;
         BigInteger target = DifficultyAdjustmentRedux.toTarget(header.bits);
 
-        header.rendomizeNonce(); //So that all nodes doesn't start from the same nonce
+        header.randomizeNonce(); //So that all nodes doesn't start from the same nonce
 
         long timer = System.currentTimeMillis();
         int searched = 0;
@@ -107,6 +107,14 @@ public class Miner extends AbstractTask {
             if(new BigInteger(ByteBuffer.allocate(1+hash.length).put((byte) 0x00).put(hash).array()).compareTo(target) < 0) {
                 break;
             }
+
+//            if(searched%10000000 == 0) {
+//                if(transactionPool.getNTransactions(100).size() > candidate.transactions.size()) {
+//                    candidate = constructCandidate();
+//                    header = candidate.header;
+//                    header.randomizeNonce();
+//                }
+//            }
 
             header.incrementNonce();
         }

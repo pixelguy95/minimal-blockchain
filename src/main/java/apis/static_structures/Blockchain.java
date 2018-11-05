@@ -248,11 +248,11 @@ public class Blockchain {
         for(Transaction t : temp.transactions) {
             AtomicInteger index = new AtomicInteger(0);
             List<UTXOIdentifier> ids = t.inputs.stream()
-                    .map(input-> new UTXOIdentifier(input.transactionHash, input.outputIndex))
+                    .map(input-> input.toUTXUtxoIdentifier())
                     .collect(Collectors.toList());
 
             for(int i = 0; i < ids.size(); i++) {
-                oldUTXOS.put(ids.get(i), t.outputs.get(i));
+                oldUTXOS.put(ids.get(i), null);
             }
         }
 

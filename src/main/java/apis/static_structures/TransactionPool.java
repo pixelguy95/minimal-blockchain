@@ -1,12 +1,15 @@
 package apis.static_structures;
 
+import domain.transaction.Input;
 import domain.transaction.Transaction;
+import domain.utxo.UTXOIdentifier;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Right now this acts as a wrapper around the transaction pool db,
@@ -67,5 +70,35 @@ public class TransactionPool {
         iterator.forEachRemaining(entry -> nTransactions.add(Transaction.fromBytes(entry.getValue())));
 
         return nTransactions;
+    }
+
+    public boolean containsInput(List<Input> inputs) {
+
+        DBIterator iterator = transactionPoolDB.iterator();
+        for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
+            List<UTXOIdentifier> ids = inputs.stream().map(i->i.toUTXUtxoIdentifier()).collect(Collectors.toList());
+            List<UTXOIdentifier> idsInPool = Transaction.fromBytes(iterator.peekNext().getValue()).inputs.stream().map(i->i.toUTXUtxoIdentifier()).collect(Collectors.toList());
+
+            for(UTXOIdentifier newID : ids) {
+                if(idsInPool.contains(newID)) {
+
+                    try {
+                        iterator.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    return true;
+                }
+            }
+        }
+
+        try {
+            iterator.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 }

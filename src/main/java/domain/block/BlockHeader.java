@@ -41,7 +41,7 @@ public class BlockHeader implements Serializable {
         this.nonce++;
     }
 
-    public void rendomizeNonce() {
+    public void randomizeNonce() {
         this.nonce = new SecureRandom().nextLong();
     }
 

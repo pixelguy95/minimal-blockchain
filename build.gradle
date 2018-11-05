@@ -30,3 +30,16 @@ dependencies {
 
     compile group: 'org.iq80.leveldb', name: 'leveldb', version: '0.10'
 }
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'minimal-blockchain-node',
+                'Implementation-Version': version,
+                'Main-Class': 'node.Node'
+    }
+    baseName = project.name + '-node'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
+}

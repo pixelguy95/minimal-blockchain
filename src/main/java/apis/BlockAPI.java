@@ -16,6 +16,7 @@ import domain.block.Block;
 import domain.block.StoredBlock;
 import node.Config;
 import node.SpecialJSONSerializer;
+import org.restlet.resource.ResourceException;
 import spark.Request;
 import spark.Response;
 import utils.PrintUtils;
@@ -115,7 +116,13 @@ public class BlockAPI {
         List<Host> potentialHolders = knownNodesList.getAllNodesUnderIP(request.ip());
 
         for (Host h : potentialHolders) {
-            GetBlockResponse gbr = BlockRESTWrapper.getBlock(h, blockhash);
+
+            GetBlockResponse gbr;
+            try {
+                gbr = BlockRESTWrapper.getBlock(h, blockhash);
+            } catch (ResourceException e) {
+                continue;
+            }
 
             if (!gbr.error) {
                 System.out.print(PrintUtils.ANSI_YELLOW + Base64.getUrlEncoder().withoutPadding().encodeToString(gbr.block.header.getHash()) + " " + PrintUtils.ANSI_RESET);

@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.restlet.resource.ResourceException;
 import spark.Service;
+import utils.DifficultyAdjustmentRedux;
 import utils.RESTUtils;
 
 public class Node {
@@ -54,6 +55,8 @@ public class Node {
 
         isRunning = new AtomicBoolean(true);
         config = new Config(args);
+
+        System.out.println(DifficultyAdjustmentRedux.toTarget(0x1d06810e).toString(16));
 
         dbs = new DBHolder(config.dbFolder);
         if(config.isInitial) {
