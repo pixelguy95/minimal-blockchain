@@ -62,7 +62,6 @@ public class Miner extends AbstractTask {
             }
         }).start();
 
-        System.out.println("Start of mining");
         while(keepAlive.get()) {
 
             KeyPair pair = ECKeyManager.generateNewKeyPair();
@@ -72,11 +71,11 @@ public class Miner extends AbstractTask {
 
             long start = System.currentTimeMillis();
             boolean iMined = mineBlock(candidate, keepLooking, cancelWatch);
-            System.out.println("TIME " + ((double)(System.currentTimeMillis() - start) / 1000.0));
-            System.out.println("CHAIN SIZE: " + blockchain.getChain().size());
+            //System.out.println("TIME " + ((double)(System.currentTimeMillis() - start) / 1000.0));
 
-            if(iMined)
+            if(iMined) {
                 BlockRESTWrapper.newBlock(new Host("localhost", config.port), candidate);
+            }
 
         }
     }
@@ -100,20 +99,13 @@ public class Miner extends AbstractTask {
         header.rendomizeNonce(); //So that all nodes doesn't start from the same nonce
 
         long timer = System.currentTimeMillis();
-        System.out.print("MINING:");
         int searched = 0;
         while(keepLooking.get()){
             searched++;
 
             byte[] hash = header.getHash();
             if(new BigInteger(ByteBuffer.allocate(1+hash.length).put((byte) 0x00).put(hash).array()).compareTo(target) < 0) {
-                System.out.println();
                 break;
-            }
-
-            if(System.currentTimeMillis() - timer > 5000) {
-                timer = System.currentTimeMillis();
-                System.out.print(" .");
             }
 
             header.incrementNonce();
@@ -121,11 +113,6 @@ public class Miner extends AbstractTask {
 
         if(keepLooking.get()) {
             cancelWatch.set(true);
-            System.out.println("BLOCK SUCCESSFULLY MINED WITH HASH");
-            System.out.println(searched);
-            System.out.println(new BigInteger(header.getHash()).toString(16));
-            System.out.println(target.toString(16));
-            System.out.println(keepLooking.get());
             return true;
         }
 

@@ -50,7 +50,6 @@ public class BlockValidator implements Validator {
         long correctBits = DifficultyAdjustmentRedux.getBlockBits(blockchain, blockchain.getBlock(block.header.prevBlockHash));
 
         if(block.header.bits != correctBits) {
-            System.out.println(correctBits + " " + block.header.bits);
             return new Result("Faulty target difficulty!");
         }
 

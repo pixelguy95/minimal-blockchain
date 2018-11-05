@@ -26,11 +26,9 @@ public class ScriptExecutor {
 
             if (op <= OpCodes.OP_16 && op >= OpCodes.OP_1) {
                 executionStack.push(ByteBuffer.allocate(4).putInt(op - 0x50).array());
-                System.out.println("Push " + (op - 0x50));
                 continue;
             }
 
-            printStack(executionStack);
             int pushMe = 0;
             int a;
             int b;
@@ -46,28 +44,22 @@ public class ScriptExecutor {
                     data = new byte[size];
                     bb.get(data, 0, size);
                     executionStack.push(data);
-                    System.out.println("Push " + new BigInteger(data).toString(16));
                     break;
 
                 case OpCodes.OP_ADD:
                     a = ByteBuffer.wrap(executionStack.pop()).getInt();
                     b = ByteBuffer.wrap(executionStack.pop()).getInt();
                     executionStack.push(ByteBuffer.allocate(4).putInt(a + b).array());
-                    System.out.println("Add " + a + " " + b);
                     break;
                 case OpCodes.OP_EQUAL:
                     cA = executionStack.pop();
                     cB = executionStack.pop();
-                    System.out.println("Equals " + new BigInteger(cA).toString(16) + " " + new BigInteger(cB).toString(16));
                     executionStack.push(ByteBuffer.allocate(1).put((byte) (Arrays.equals(cA, cB) ? 1 : 0)).array());
                     break;
                 case OpCodes.OP_EQUALVERIFY:
                     cA = executionStack.pop();
                     cB = executionStack.pop();
 
-                    System.out.println("Equal verify");
-                    System.out.println("a " + new BigInteger(cA).toString(16));
-                    System.out.println("b " + new BigInteger(cB).toString(16));
                     if(!(Arrays.equals(cA, cB))) {
                         return false;
                     }
@@ -87,9 +79,6 @@ public class ScriptExecutor {
                     cA = executionStack.pop();
                     cB = executionStack.pop();
 
-                    System.out.println("Check sig");
-                    System.out.println("a " + new BigInteger(cA).toString(16));
-                    System.out.println("b " + new BigInteger(cB).toString(16));
                     PublicKey pk = ECKeyManager.bytesToPublicKey(cA);
                     boolean verified = ECSignatureUtils.verify(cB, m, pk);
 

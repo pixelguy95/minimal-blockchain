@@ -27,9 +27,6 @@ public class UTXOAPI {
         byte[] txid = Base64.getUrlDecoder().decode(request.params("txid"));
         int index = Integer.parseInt(request.params("index"));
 
-        System.out.println(request.params("txid") + " " + request.params("index"));
-        System.out.println(utxo.getAll().size());
-
         if(utxo.has(new UTXOIdentifier(txid, index))) {
             return new GetOutputResponse(utxo.get(new UTXOIdentifier(txid, index)));
         }

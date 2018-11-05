@@ -29,7 +29,6 @@ public class NetworkSetup extends AbstractTask {
 
     @Override
     public void run() {
-        knownNodesList.getKnownNodes().stream().forEach(n-> System.out.println(n.ip + ":" + n.port));
         HandshakeRequest hsr = config.generateHandShakeRequest(knownNodesList.getKnownNodes().iterator().next().asURL(), blockchain.getBestHeight());
         HandshakeResponse response = RESTUtils.post(knownNodesList.getKnownNodes().iterator().next(), "handshake", HandshakeResponse.class, hsr);
 
@@ -53,8 +52,6 @@ public class NetworkSetup extends AbstractTask {
 
             RESTUtils.post(next, "addr", AddrResponse.class, new AddrRequest(config.outwardIP, config.port));
             GetAddrResponse gres = RESTUtils.get(next, "addr", GetAddrResponse.class);
-
-            gres.knownHosts.stream().forEach(h-> System.out.println(h.asURL()));
 
             for(Host h : gres.knownHosts) {
                 if(!knownNodesList.getKnownNodes().contains(h) && !me.equals(h)) {

@@ -13,8 +13,8 @@ import apis.utils.validators.Validator;
 import apis.utils.wrappers.BlockRESTWrapper;
 import domain.block.Block;
 import node.Config;
-import org.apache.commons.collections4.ListUtils;
 import org.restlet.resource.ResourceException;
+import utils.PrintUtils;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -50,48 +50,60 @@ public class BlockSync {
 
     /**
      * Below text is a bit old now
-     *
+     * <p>
      * WARNING!
      * This will work given that the block chain is small.
      * If there are 100.000 blocks all of them 1MB you will roughly have to load 100GB into memory.
      * This will not be possible
-     *
+     * <p>
      * What we need is some way to fetch only the next block in the chain and add it before getting the next.
      * This can not be derived from hashes alone though.
-     *
      */
     public boolean sync() {
+
+        System.out.println(PrintUtils.ANSI_PURPLE_BACKGROUND + "=== START OF BLOCK SYNC===" + PrintUtils.ANSI_RESET);
         List<String> partitionedHashes = getHashSetOfAllBlocks(blockchain.getBestHeight() - 1);
-        for(String hash : partitionedHashes) {
-            List<Block> blocksInThisPartition = getBlocksFromDifferentNodes(Arrays.asList(hash));
+        for (String hash : partitionedHashes) {
+            System.out.print(PrintUtils.ANSI_YELLOW + hash + " " + PrintUtils.ANSI_RESET);
+            Block nextBlock = getBlockFromDifferentNodes(hash);
+            PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "FETCHED" + PrintUtils.ANSI_RESET);
 
-            for(Block b : blocksInThisPartition) {
-                if(!blockchain.getChain().containsKey(b.header.getHash())) {
+            if (!blockchain.getChain().containsKey(ByteBuffer.wrap(nextBlock.header.getHash()))) {
 
-                    if(config.validateNewBlocks) {
-                        Validator.Result result = blockValidator.validate(b);
-                        if(result.passed) {
-                            BlockAddingManager.addBlockAndManageUTXOs(blockchain, utxo, transactionPool, transactionValidator, config, b);
-                        } else {
-                            System.err.println("Block sync failed: " + result.resaon);
-                            return false;
-                        }
+                if (config.validateNewBlocks) {
+                    Validator.Result result = blockValidator.validate(nextBlock);
+                    if (result.passed) {
+                        PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "VALIDATED" + PrintUtils.ANSI_RESET);
+                        BlockAddingManager.addBlockAndManageUTXOs(blockchain, utxo, transactionPool, transactionValidator, config, nextBlock);
+                        PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "ADDED TO CHAIN" + PrintUtils.ANSI_RESET);
+                    } else {
+                        PrintUtils.printInBrackets(PrintUtils.ANSI_RED + "FAILED VALIDATED" + PrintUtils.ANSI_RESET);
+                        System.err.println("Block sync failed: " + result.resaon);
+                        return false;
                     }
+                } else {
+                    BlockAddingManager.addBlockAndManageUTXOs(blockchain, utxo, transactionPool, transactionValidator, config, nextBlock);
+                    PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "ADDED TO CHAIN" + PrintUtils.ANSI_RESET);
                 }
+            } else {
+                PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "ALREADY KNOWN" + PrintUtils.ANSI_RESET);
             }
+
+            System.out.println();
         }
 
+        System.out.println(PrintUtils.ANSI_PURPLE_BACKGROUND + "=== END OF BLOCK SYNC===" + PrintUtils.ANSI_RESET);
         return true;
     }
 
     private List<String> getHashSetOfAllBlocks(long height) {
         List<String> ret = new ArrayList<>();
-        for(Host h : knownNodesList.getKnownNodes()) {
+        for (Host h : knownNodesList.getKnownNodes()) {
             try {
-                GetAllBlockHashesResponse response = BlockRESTWrapper.getAllBlockHashesFromHeight(h, (int)height);
+                GetAllBlockHashesResponse response = BlockRESTWrapper.getAllBlockHashesFromHeight(h, (int) height);
 
-                for(String hash : response.hashes) {
-                    if(!ret.contains(hash)){
+                for (String hash : response.hashes) {
+                    if (!ret.contains(hash)) {
                         ret.add(hash);
                     }
                 }
@@ -104,27 +116,21 @@ public class BlockSync {
         return ret;
     }
 
-    private List<Block> getBlocksFromDifferentNodes(List<String> blockHashes) {
-        List<Block> blockBuffer = new ArrayList<>();
-        for(String hash : blockHashes) {
-            byte[] byteHash = Base64.getUrlDecoder().decode(hash);
-            if(!blockchain.getChain().containsKey(ByteBuffer.wrap(byteHash))) {
-                Block b = null;
-                while(b == null) {
+    private Block getBlockFromDifferentNodes(String hash) {
+        Block block = null;
+        byte[] byteHash = Base64.getUrlDecoder().decode(hash);
+        while (block == null) {
 
-                    Host attempt = randomNode();
-                    try {
-                        b = BlockRESTWrapper.getBlock(attempt, byteHash).block;
-                        blockBuffer.add(b);
-                    } catch (ResourceException e) {
-                        //Host/Node was not responding.
-                        knownNodesList.removeNode(attempt);
-                    }
-                }
+            Host attempt = randomNode();
+            try {
+                block = BlockRESTWrapper.getBlock(attempt, byteHash).block;
+            } catch (ResourceException e) {
+                //Host/Node was not responding.
+                knownNodesList.removeNode(attempt);
             }
         }
 
-        return blockBuffer;
+        return block;
     }
 
     private Host randomNode() {

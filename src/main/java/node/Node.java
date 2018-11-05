@@ -52,13 +52,8 @@ public class Node {
 
     public Node(String[] args) {
 
-        System.out.println(System.currentTimeMillis() / 1000);
-        System.out.println(Block.INITIAL_REWARD);
-
         isRunning = new AtomicBoolean(true);
         config = new Config(args);
-
-        System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(Ripemd160.getHash(DigestUtils.sha256(config.miningPublicKey.getEncoded()))));
 
         dbs = new DBHolder(config.dbFolder);
         if(config.isInitial) {

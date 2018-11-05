@@ -6,11 +6,9 @@ import apis.static_structures.UTXO;
 import apis.utils.wrappers.TransactionRESTWrapper;
 import domain.Validatable;
 import domain.utxo.UTXOIdentifier;
-import io.nayuki.bitcoin.crypto.Base58Check;
 import io.nayuki.bitcoin.crypto.Ripemd160;
 import org.apache.commons.codec.digest.DigestUtils;
 import script.ScriptBuilder;
-import security.ECKeyManager;
 import security.ECSignatureUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -21,7 +19,6 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * https://en.bitcoin.it/wiki/Transaction
@@ -173,8 +170,6 @@ public class Transaction implements Serializable, Validatable {
 
         byte[] sha = DigestUtils.sha256(publicKey);
         byte[] rip = Ripemd160.getHash(sha);
-
-        System.out.println(Base58Check.bytesToBase58(rip));
 
         byte[] scriptSig = ScriptBuilder.newScript().writeToStack(signature).writeToStack(publicKey).end();
         byte[] scriptPubKey = ScriptBuilder.newScript().dup().hash160().writeToStack(rip).equalVerify().checkSig().end();

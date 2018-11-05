@@ -81,10 +81,8 @@ public class DifficultyAdjustmentRedux {
         BigInteger target = toTarget(bits);
         long blockTimeDiff = lastBlockTime - compareBlockTime;
         double div =  (double)(TARGET_BLOCK_TIME * RECALCULATE_HEIGHT) / (double)(blockTimeDiff);
-        System.out.println("OPTIMAL / CURRENT = " + div);
+        //System.out.println("OPTIMAL / CURRENT = " + div);
         BigInteger newTarget = new BigDecimal(target).divide(new BigDecimal(div), 10, RoundingMode.HALF_EVEN).toBigInteger();
-        System.out.println("====NEW TARGET====");
-        System.out.println(newTarget.toString(16));
 
         return toCompactBits(newTarget);
     }

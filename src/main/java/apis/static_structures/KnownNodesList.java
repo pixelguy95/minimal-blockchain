@@ -18,11 +18,8 @@ public class KnownNodesList {
             byte[] serializedList = metaDB.get(KEY);
 
             if(serializedList != null && serializedList.length != 0) {
-                System.out.println("loaded nodes list");
                 knownNodesList = (HashSet<Host>) SerializationUtils.deserialize(serializedList);
-                //getKnownNodes().stream().forEach(n-> System.out.println(n.ip + ":" + n.port));
             } else {
-                System.out.println("new empty nodes list");
                 knownNodesList = new HashSet<>();
             }
         } finally {
@@ -36,12 +33,6 @@ public class KnownNodesList {
 
     public synchronized void addNode(Host h) {
         try {
-            if(metaDB == null) {
-                System.out.println("FAILED");
-            } else {
-
-            }
-
             knownNodesList.add(h);
             metaDB.put(KEY, SerializationUtils.serialize(knownNodesList));
         } catch (Exception e) {

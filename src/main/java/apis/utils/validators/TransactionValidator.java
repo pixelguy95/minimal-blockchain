@@ -32,8 +32,6 @@ public class TransactionValidator implements Validator {
         long inputSum = 0;
         for(Input i : transaction.inputs) {
             if(!utxo.has(new UTXOIdentifier(i.transactionHash, i.outputIndex))) {
-                System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(i.transactionHash));
-                System.out.println(i.outputIndex);
                 return new Result("One of the inputs ws not found as UTXO");
             } else {
                 if(utxo.busy.contains(new UTXOIdentifier(i.transactionHash, i.outputIndex))) {

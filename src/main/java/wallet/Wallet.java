@@ -101,10 +101,6 @@ public class Wallet {
 
                     }
                 }
-
-
-                //GetOutputByAddressResponse gobar = UTXORESTWrapper.getUTXOByPubKey(h, pair.getPublic());
-                //Arrays.stream(line.getOptionValues("s")).forEach(s-> System.out.println(s));
             }
 
         } catch (ParseException e) {

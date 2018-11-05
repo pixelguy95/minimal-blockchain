@@ -18,6 +18,7 @@ import node.Config;
 import node.SpecialJSONSerializer;
 import spark.Request;
 import spark.Response;
+import utils.PrintUtils;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -76,22 +77,30 @@ public class BlockAPI {
     public BooleanResponse newBlockFound(Request request, Response response) {
         Block b = SpecialJSONSerializer.getInstance().fromJson(request.body(), NewBlockFoundRequest.class).block;
 
+        System.out.print(PrintUtils.ANSI_BLACK + PrintUtils.ANSI_WHITE_BACKGROUND + Base64.getUrlEncoder().withoutPadding().encodeToString(b.header.getHash()) + PrintUtils.ANSI_RESET + " ");
+        PrintUtils.printInBrackets((b.transactions.size() + 1) + " TRANSACTIONS");
+        PrintUtils.printInBrackets(PrintUtils.ANSI_BLUE + BigInteger.valueOf(b.header.bits).toString(16) + PrintUtils.ANSI_RESET);
         if (config.validateNewBlocks) {
-
             Validator.Result result = blockValidator.validate(b);
-
             if(result.passed) {
+                PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "VALIDATED" + PrintUtils.ANSI_RESET);
                 BlockAddingManager.addBlockAndManageUTXOs(blockchain, utxo, transactionPool, transactionValidator, config, b);
+                PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "ADDED TO CHAIN" + PrintUtils.ANSI_RESET);
                 retransmitBlockHashToAll(b.header.getHash());
+                PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "RETRANSMITTED" + PrintUtils.ANSI_RESET);
             } else {
+                PrintUtils.printInBrackets(PrintUtils.ANSI_RED + "FAILED VALIDATED" + PrintUtils.ANSI_RESET);
                 System.err.println(result.resaon);
                 return (BooleanResponse) new BooleanResponse().setError("Block didn't pass verification: " + result.resaon);
             }
 
         } else {
             BlockAddingManager.addBlockAndManageUTXOs(blockchain, utxo, transactionPool, transactionValidator, config, b);
+            PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "ADDED TO CHAIN" + PrintUtils.ANSI_RESET);
             retransmitBlockHashToAll(b.header.getHash());
+            PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "RETRANSMITTED" + PrintUtils.ANSI_RESET);
         }
+        System.out.println();
 
         return new BooleanResponse();
     }
@@ -109,25 +118,37 @@ public class BlockAPI {
             GetBlockResponse gbr = BlockRESTWrapper.getBlock(h, blockhash);
 
             if (!gbr.error) {
+                System.out.print(PrintUtils.ANSI_YELLOW + Base64.getUrlEncoder().withoutPadding().encodeToString(gbr.block.header.getHash()) + " " + PrintUtils.ANSI_RESET);
+                PrintUtils.printInBrackets((gbr.block.transactions.size() + 1) + " TRANSACTIONS");
+                PrintUtils.printInBrackets(PrintUtils.ANSI_BLUE + BigInteger.valueOf(gbr.block.header.bits).toString(16) + PrintUtils.ANSI_RESET);
                 if (config.validateNewBlocks) {
                     Validator.Result result = blockValidator.validate(gbr.block);
 
                     if(result.passed) {
+                        PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "VALIDATED" + PrintUtils.ANSI_RESET);
                         BlockAddingManager.addBlockAndManageUTXOs(blockchain, utxo, transactionPool, transactionValidator, config, gbr.block);
+                        PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "ADDED TO CHAIN" + PrintUtils.ANSI_RESET);
                         retransmitBlockHashToAll(gbr.block.header.getHash());
+                        PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "RETRANSMITTED" + PrintUtils.ANSI_RESET);
+                        break;
                     } else {
+                        PrintUtils.printInBrackets(PrintUtils.ANSI_RED + "FAILED VALIDATED" + PrintUtils.ANSI_RESET);
                         System.err.println(result.resaon);
+                        System.out.println();
                         return (BooleanResponse) new BooleanResponse().setError("Block didn't pass verification: " + result.resaon);
                     }
 
                 } else {
                     BlockAddingManager.addBlockAndManageUTXOs(blockchain, utxo, transactionPool, transactionValidator, config, gbr.block);
+                    PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "ADDED TO CHAIN" + PrintUtils.ANSI_RESET);
                     retransmitBlockHashToAll(gbr.block.header.getHash());
+                    PrintUtils.printInBrackets(PrintUtils.ANSI_GREEN + "RETRANSMITTED" + PrintUtils.ANSI_RESET);
+                    break;
                 }
             }
         }
 
-        retransmitBlockHashToAll(blockhash);
+        System.out.println();
         return new BooleanResponse();
     }
 
@@ -160,7 +181,6 @@ public class BlockAPI {
 
         new ArrayList<>(knownNodesList.getKnownNodes()).stream().forEach(host -> {
             try {
-                System.out.println(host.ip + " " + host.port);
                 BlockRESTWrapper.retransmitBlock(host, hash);
             } catch (Exception e) {
                 notResponding.add(host);

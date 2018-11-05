@@ -22,7 +22,6 @@ public class SpecialJSONSerializer {
     private static JsonDeserializer<GetTransactionResponse> transactionDeserializer() {
         return (JsonDeserializer<GetTransactionResponse>) (json, typeOfT, context) -> {
 
-            System.out.println(json.toString());
             JsonObject whole = json.getAsJsonObject();
 
             if(whole.get("error").getAsBoolean()) {
@@ -30,13 +29,10 @@ public class SpecialJSONSerializer {
             }
 
             JsonObject transactionObject = whole.get("transaction").getAsJsonObject();
-            System.out.println(transactionObject.toString());
 
             if(transactionObject.has("randPart")) {
-                System.out.println("COINBASE");
                 return new GetTransactionResponse(getInstance().fromJson(transactionObject.toString(), CoinbaseTransaction.class));
             } else {
-                System.out.println("NOT COINBASE");
                 return new GetTransactionResponse(getInstance().fromJson(transactionObject.toString(), Transaction.class));
             }
         };

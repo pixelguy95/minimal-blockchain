@@ -2,9 +2,7 @@ import io.nayuki.bitcoin.crypto.Ripemd160;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Test;
 import security.ECKeyManager;
-import utils.DifficultyAdjustment;
 
-import java.math.BigInteger;
 import java.security.KeyPair;
 import java.util.Base64;
 
