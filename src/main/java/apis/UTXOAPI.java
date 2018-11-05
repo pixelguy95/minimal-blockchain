@@ -1,6 +1,7 @@
 package apis;
 
 import apis.domain.responses.GetOutputByAddressResponse;
+import apis.domain.responses.GetOutputIDsByAddressResponse;
 import apis.domain.responses.GetOutputResponse;
 import apis.static_structures.UTXO;
 import domain.transaction.Output;
@@ -52,7 +53,7 @@ public class UTXOAPI {
         all.values().stream().forEach(output->{
             ByteBuffer script = ByteBuffer.wrap(output.scriptPubKey);
 
-            if(ScriptExecutor.unsignedToBytes(script.get()) == OpCodes.OP_DUP && ScriptExecutor.unsignedToBytes(script.get()) == OpCodes.OP_HASH160) {
+            if(isP2PKH(script)) {
                 //Removes trivial op codes for writing to the stack.
                 script.get();
                 script.getInt();
@@ -67,5 +68,35 @@ public class UTXOAPI {
         });
 
         return new GetOutputByAddressResponse(matches);
+    }
+
+    public GetOutputIDsByAddressResponse fetchUTXOIDsByAddress(Request request, Response response) {
+
+        List<UTXOIdentifier> matches = new ArrayList<>();
+        byte[] ripmd160Address = Base64.getUrlDecoder().decode(request.params("pubkey"));
+        Map<UTXOIdentifier, Output> all = utxo.getAll();
+
+        all.entrySet().forEach(entry->{
+            ByteBuffer script = ByteBuffer.wrap(entry.getValue().scriptPubKey);
+
+            if(isP2PKH(script)) {
+                //Removes trivial op codes for writing to the stack.
+                script.get();
+                script.getInt();
+
+                byte[] pubAddressFromScript = new byte[20];
+                script.get(pubAddressFromScript, 0, 20);
+
+                if(ByteBuffer.wrap(pubAddressFromScript).equals(ByteBuffer.wrap(ripmd160Address))) {
+                    matches.add(entry.getKey());
+                }
+            }
+        });
+
+        return new GetOutputIDsByAddressResponse(matches);
+    }
+
+    private boolean isP2PKH(ByteBuffer script) {
+        return ScriptExecutor.unsignedToBytes(script.get()) == OpCodes.OP_DUP && ScriptExecutor.unsignedToBytes(script.get()) == OpCodes.OP_HASH160;
     }
 }

@@ -98,6 +98,16 @@ public class ScriptBuilder {
                 .end();
     }
 
+    public static byte[] generateP2PKScript(byte[] address) {
+        return ScriptBuilder.newScript()
+                .dup()
+                .hash160()
+                .writeToStack(address)
+                .equalVerify()
+                .checkSig()
+                .end();
+    }
+
     public static byte[] generateP2PKSignature(byte[] signature, PublicKey pub) {
         return ScriptBuilder.newScript()
                 .writeToStack(signature)

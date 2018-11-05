@@ -16,6 +16,10 @@ public class TransactionRESTWrapper {
         return RESTUtils.get(host, "transaction", GetTransactionResponse.class, Arrays.asList(Base64.getUrlEncoder().withoutPadding().encodeToString(txid)));
     }
 
+    public static GetTransactionResponse getTransactionFromChain(Host host, byte[] txid) {
+        return RESTUtils.get(host, "transaction/onblockchain", GetTransactionResponse.class, Arrays.asList(Base64.getUrlEncoder().withoutPadding().encodeToString(txid)));
+    }
+
     public static TransactionRetransmissionResponse retransmitTransaction(Host host, byte[] txid) {
         return RESTUtils.get(host, "transaction/retransmission", TransactionRetransmissionResponse.class, Arrays.asList(Base64.getUrlEncoder().withoutPadding().encodeToString(txid)));
     }

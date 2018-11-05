@@ -61,11 +61,9 @@ public class BlockSync {
      *
      */
     public boolean sync() {
-        List<List<String>> partitionedHashes = ListUtils.partition(
-                new ArrayList<>(getHashSetOfAllBlocks(blockchain.getBestHeight() - 1)), 10);
-
-        for(List<String> partition : partitionedHashes) {
-            List<Block> blocksInThisPartition = getBlocksFromDifferentNodes(partition);
+        List<String> partitionedHashes = getHashSetOfAllBlocks(blockchain.getBestHeight() - 1);
+        for(String hash : partitionedHashes) {
+            List<Block> blocksInThisPartition = getBlocksFromDifferentNodes(Arrays.asList(hash));
 
             for(Block b : blocksInThisPartition) {
                 if(!blockchain.getChain().containsKey(b.header.getHash())) {
@@ -86,12 +84,18 @@ public class BlockSync {
         return true;
     }
 
-    private HashSet<String> getHashSetOfAllBlocks(long height) {
-        HashSet<String> ret = new HashSet<>();
+    private List<String> getHashSetOfAllBlocks(long height) {
+        List<String> ret = new ArrayList<>();
         for(Host h : knownNodesList.getKnownNodes()) {
             try {
                 GetAllBlockHashesResponse response = BlockRESTWrapper.getAllBlockHashesFromHeight(h, (int)height);
-                ret.addAll(response.hashes);
+
+                for(String hash : response.hashes) {
+                    if(!ret.contains(hash)){
+                        ret.add(hash);
+                    }
+                }
+
             } catch (ResourceException e) {
 
             }

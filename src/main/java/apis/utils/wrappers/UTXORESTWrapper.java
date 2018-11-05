@@ -28,4 +28,9 @@ public class UTXORESTWrapper {
         String pubkey = Base64.getUrlEncoder().withoutPadding().encodeToString(Ripemd160.getHash(DigestUtils.sha256(pub.getEncoded())));
         return RESTUtils.get(host, "utxo", GetOutputByAddressResponse.class, Arrays.asList(pubkey));
     }
+
+    public static GetOutputIDsByAddressResponse getUTXOIDsByPubKey(Host host, PublicKey pub) {
+        String pubkey = Base64.getUrlEncoder().withoutPadding().encodeToString(Ripemd160.getHash(DigestUtils.sha256(pub.getEncoded())));
+        return RESTUtils.get(host, "utxo/ids", GetOutputIDsByAddressResponse.class, Arrays.asList(pubkey));
+    }
 }

@@ -73,7 +73,7 @@ public class Node {
         TransactionValidator transactionValidator = new TransactionValidator(utxo, blockchain, transactionPool);
         BlockValidator blockValidator = new BlockValidator(utxo, blockchain, transactionPool, transactionValidator, config);
 
-        transactionAPI = new TransactionAPI(transactionPool, knownNodesList, transactionValidator, config);
+        transactionAPI = new TransactionAPI(transactionPool, blockchain, knownNodesList, transactionValidator, config);
         debugAPI = new DebugAPI(transactionPool);
         handshakeAPI = new HandshakeAPI(knownNodesList);
         blockAPI = new BlockAPI(blockchain, utxo, transactionPool, blockValidator, transactionValidator, knownNodesList, config);
@@ -143,12 +143,15 @@ public class Node {
         http.path("/transaction", () -> {
             http.post("", transactionAPI::newTransaction, gson::toJson);
             http.get("/:txid", transactionAPI::fetchTransaction, gson::toJson);
+            http.get("/onblockchain/:txid", transactionAPI::fetchTransactionFromChain, gson::toJson);
             http.get("/retransmission/:txid", transactionAPI::retransmittedTransaction, gson::toJson);
         });
 
+        /*UTXO*/
         http.path("/utxo", () -> {
-            http.get("/:txid/:index", utxoAPI::fetchUTXO, gson::toJson);
             http.get("/:pubkey", utxoAPI::fetchUTXOByAddress, gson::toJson);
+            http.get("/ids/:pubkey", utxoAPI::fetchUTXOIDsByAddress, gson::toJson);
+            http.get("/:txid/:index", utxoAPI::fetchUTXO, gson::toJson);
         });
 
         /*Debug*/

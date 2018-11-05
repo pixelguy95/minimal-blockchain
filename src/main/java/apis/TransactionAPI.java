@@ -5,10 +5,12 @@ import apis.domain.requests.NewTransactionRequest;
 import apis.domain.responses.GetTransactionResponse;
 import apis.domain.responses.NewTransactionResponse;
 import apis.domain.responses.TransactionRetransmissionResponse;
+import apis.static_structures.Blockchain;
 import apis.static_structures.KnownNodesList;
 import apis.static_structures.TransactionPool;
 import apis.utils.wrappers.TransactionRESTWrapper;
 import apis.utils.validators.TransactionValidator;
+import domain.block.Block;
 import domain.transaction.Transaction;
 import node.Config;
 import node.SpecialJSONSerializer;
@@ -25,10 +27,12 @@ public class TransactionAPI {
     private TransactionPool transactionPool;
     private KnownNodesList knownNodesList;
     private TransactionValidator transactionValidator;
+    private Blockchain blockchain;
     private Config config;
 
-    public TransactionAPI(TransactionPool transactionPool, KnownNodesList knownNodesList, TransactionValidator transactionValidator, Config config) {
+    public TransactionAPI(TransactionPool transactionPool, Blockchain blockchain, KnownNodesList knownNodesList, TransactionValidator transactionValidator, Config config) {
         this.transactionPool = transactionPool;
+        this.blockchain = blockchain;
         this.knownNodesList = knownNodesList;
         this.transactionValidator = transactionValidator;
         this.config = config;
@@ -44,7 +48,7 @@ public class TransactionAPI {
                 transactionPool.put(t);
                 retransmitTransaction(t.fullHash());
             } else {
-                return (NewTransactionResponse) new NewTransactionResponse().setError("Transaction didn't pass validation");
+                return (NewTransactionResponse) new NewTransactionResponse().setError("Transaction didn't pass validation, " + res.resaon);
             }
 
         } else {
@@ -57,6 +61,17 @@ public class TransactionAPI {
 
     public GetTransactionResponse fetchTransaction(Request request, Response response) {
         Transaction t = transactionPool.get(Base64.getUrlDecoder().decode(request.params("txid")));
+
+        if (t != null) {
+            return new GetTransactionResponse(t);
+        }
+
+        return (GetTransactionResponse) new GetTransactionResponse(null).setError("No transaction with that txid: " + request.params("txid"));
+    }
+
+    public GetTransactionResponse fetchTransactionFromChain(Request request, Response response) {
+
+        Transaction t = blockchain.getTransactionByTXID(Base64.getUrlDecoder().decode(request.params("txid")));
 
         if (t != null) {
             return new GetTransactionResponse(t);

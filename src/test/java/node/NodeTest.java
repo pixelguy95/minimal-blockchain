@@ -259,6 +259,10 @@ public class NodeTest {
     @Test
     public void testDisconnectingNodes() throws InterruptedException, IOException {
         Block genesis = node1.blockchain.getGenesisBlock();
+        node1.config.validateBlockTarget = false;
+        node2.config.validateBlockTarget = false;
+        node3.config.validateBlockTarget = false;
+        node4.config.validateBlockTarget = false;
         Block block1 = new Block(Arrays.asList(), genesis.header.getHash(), pair.getPublic());
         Block block2 = new Block(Arrays.asList(), block1.header.getHash(), pair.getPublic());
         Block block3 = new Block(Arrays.asList(), block2.header.getHash(), pair.getPublic());

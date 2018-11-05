@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 
 public class UTXOAPITest {
 
-    private static final String[] initialNodeArgs = new String[]{"-i", "-p", "13337", "-db", ".local-persistence-test1"};
+    private static final String[] initialNodeArgs = new String[]{"-i", "-p", "13337", "-db", ".local-persistence-test1", "-nm"};
     public Node node;
     public Host localHost = new Host("localhost:13337");
     private PublicKey pub;

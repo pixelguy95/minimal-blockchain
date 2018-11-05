@@ -99,13 +99,21 @@ public class Miner extends AbstractTask {
 
         header.rendomizeNonce(); //So that all nodes doesn't start from the same nonce
 
+        long timer = System.currentTimeMillis();
+        System.out.print("MINING:");
         int searched = 0;
         while(keepLooking.get()){
             searched++;
 
             byte[] hash = header.getHash();
             if(new BigInteger(ByteBuffer.allocate(1+hash.length).put((byte) 0x00).put(hash).array()).compareTo(target) < 0) {
+                System.out.println();
                 break;
+            }
+
+            if(System.currentTimeMillis() - timer > 5000) {
+                timer = System.currentTimeMillis();
+                System.out.print(" .");
             }
 
             header.incrementNonce();

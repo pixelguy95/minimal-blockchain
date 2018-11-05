@@ -283,7 +283,7 @@ public class Blockchain {
         while(b != null) {
 
             for(Transaction t : b.transactions) {
-                if(ByteBuffer.wrap(t.serialize()).equals(ByteBuffer.wrap(txid))) {
+                if(ByteBuffer.wrap(t.fullHash()).equals(ByteBuffer.wrap(txid))) {
                     return t;
                 }
             }
