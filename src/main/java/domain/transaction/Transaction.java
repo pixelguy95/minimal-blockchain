@@ -46,10 +46,6 @@ public class Transaction implements Serializable, Validatable {
         this.lockTime = lockTime;
     }
 
-    /**
-     * Serialize, for putting in blocks
-     * @return bytes
-     */
     public byte[] serialize() {
         ByteArrayOutputStream bb = new ByteArrayOutputStream();
         try {
